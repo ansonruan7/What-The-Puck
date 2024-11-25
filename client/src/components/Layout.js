@@ -8,6 +8,7 @@ function Layout ({children}) {
     const navigateHome = () => navigate('/');
     const navigateCreateAccount = () => navigate('/CreateAccount');
     const navigateLogin =() => navigate('/Login');
+    const navigateUserPortal =() => navigate('/AuthUser');
 
 
 
@@ -23,6 +24,7 @@ function Layout ({children}) {
                 </div>
             <div className="nav-links">
                 <a href="#" onClick={navigateHome}>Home</a>
+                <a href="#" onClick={navigateUserPortal}>User Portal</a>
                 <a href="#" onClick={navigateLogin}>Log in</a>
             </div>
             <div className="cartButtonStyle">
