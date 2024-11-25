@@ -9,10 +9,14 @@ function Layout ({children}) {
     const navigateCreateAccount = () => navigate('/CreateAccount');
     const navigateLogin =() => navigate('/Login');
     const navigateUserPortal =() => navigate('/AuthUser');
+    const { logoutUser } = useUser();
 
 
 
     const handleLogout = async() => {
+        logoutUser();
+          localStorage.removeItem('token');
+          navigate('/login');
 
     }
 
