@@ -27,12 +27,16 @@ body {
     font-weight: bold;
 }
 
-/* Navigation Links */
+/* Navigation Links Container */
 .nav-links {
     text-align: center;
     margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
 
+/* Individual Links */
 .nav-links a {
     text-decoration: none;
     color: #ffffff;
@@ -46,6 +50,7 @@ body {
     background: #357abd;
 }
 
+
 /* Main Content */
 .main-content {
     padding: 20px;
@@ -54,3 +59,68 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+.cartButtonStyle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    gap: 15px; /* Adds spacing between buttons */
+}
+
+.buttonTextStyle {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #4CAF50;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.buttonTextStyle:hover {
+    background-color: #45a049;
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.buttonTextStyle:active {
+    background-color: #388e3c;
+    transform: translateY(2px);
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.1);
+}
+
+.log-out {
+    margin: 20px 0;
+    display: flex;
+    justify-content: flex-end; /* Align to the left */
+}
+
+.log-out button {
+    text-decoration: none;
+    color: #ffffff;
+    background: #4a90e2;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.log-out button:hover {
+    background: #357abd;
+}
+
+.log-out button:active {
+    background: #2d6aa3;
+    transform: translateY(2px);
+}
+
+
+
+
