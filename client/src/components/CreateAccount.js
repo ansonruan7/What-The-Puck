@@ -15,8 +15,32 @@ const CreateAccount = () => {
 
 
     const handleSignup = async() => {
+        try {
+            const response = await fetch('/api/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password, username: nickname, role }),
+            });
 
-    }
+            if (response.ok) {
+                const responseData = await response.json();
+                setInfo(responseData.message);
+                console.log('Account Created Successfully:', responseData.message);
+
+                
+                
+            } else {
+                const errorData = await response.json();
+                setInfo(errorData.message || 'An error occurred.');
+                console.error('Error creating account:', errorData.message);
+            }
+        } catch (error) {
+            console.error('Creation of Account Has Failed:', error);
+            setInfo('Creation of Account Has Failed.');
+        }
+    };
 
     return (
         <Layout>
@@ -41,11 +65,18 @@ const CreateAccount = () => {
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
                 />
-                <div className="role-buttons">
-                    <label>Please Select One Role:</label>
-                    <button onClick={() => setRole('Coach/Manager')}>Coach/Manager</button>
-                    <button onClick={() => setRole('Player')}>Player</button>
-                    <button onClick={() => setRole('Admin')}>Admin</button>
+                <div className="role-dropdown">
+                    <label htmlFor="role-select">Please Select One Role:</label>
+                    <select 
+                        id="role-select" 
+                        onChange={(e) => setRole(e.target.value)} 
+                        defaultValue="" // Ensures no role is selected by default
+                    >
+                        <option value="" disabled>Select a role</option>
+                        <option value="Coach/Manager">Coach/Manager</option>
+                        <option value="Player">Player</option>
+                        <option value="Admin">Admin</option>
+                    </select>
                 </div>
                 <br></br>
                 <br></br>
@@ -61,4 +92,3 @@ const CreateAccount = () => {
 }
 
 export default CreateAccount;
-
