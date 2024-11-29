@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const app = express();
-const port = 3000;
+const port = 5000;
 const Storage = require('node-storage');
 const store = new Storage('./data/db.json');
 const mongoose = require('mongoose');
@@ -12,6 +12,8 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
+
+const { ObjectId } = require('mongodb');
 
 
 mongoose.connect('mongodb+srv://dkorkut:danielwestern@cluster0.xxodj.mongodb.net/WHATTHEPUCK', {
@@ -48,6 +50,7 @@ const User = mongoose.model('User', {
   salt: {type: String, required: true},
   disabled: {type: Boolean, default: false},
   verified: {type: Boolean, default: false},
+  role_verified: {type: Boolean, default: false},
   isAdmin: {type: Boolean, default: false},
 })
 
@@ -242,6 +245,34 @@ const tokenVerification = (req, res, next) => {
   });
 };
 
+// Request that pulls all users with unverified roles
+app.get('/api/verify_role', async (req, res) => {
+  try{
+    // Get all users that have not had their roles verified
+    const curs = await User.find({role_verified: false});
+    res.json(curs);
+  } catch (error){
+    console.error('Error fetching events:', error);
+    res.status(404).send('Error ' + error);
+  }
+});
+
+// Request that pushes the decision of the admin
+app.post('/api/role_decision', async (req, res) => {
+  console.log('request sent');
+  const {_id, approved} = req.body;
+  console.log(_id, approved);
+  const id = new ObjectId(req.body._id);
+  try{
+    const result = await User.updateOne(
+      { _id:  id},
+      { $set: { role_verified: req.body.approved } }
+    );
+    res.json(result);
+  } catch (error){
+    console.log("Error occured: " + error);
+  }
+});
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);

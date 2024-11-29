@@ -60,10 +60,11 @@ const CoachDashboard = () => {
                     <div className='grid grid-cols-3'>
                         <div className='col-span-2 m-10'>
                             <h1 className='text-center text-4xl font-semibold'>My Team</h1>
+
                             {/* Contains all player cards */}
                             <div className='grid grid-cols-3 grid-rows-3'>
                                 {playerCards.map((player, index) => (
-                                        <li key={index} className='p-4 mx-16 border-2 border-solid border-black rounded-xl m-2 flex flex-col items-center'>
+                                        <li key={index} className='p-4 border-2 border-solid border-black rounded-xl m-2 flex flex-col items-center'>
                                             {/* Player Image */}
                                             <img src={temp_picture} alt={player.playerName} className='w-32 h-32 mb-4' /> 
                                             <p className='font-bold'>{player.playerName}</p>
@@ -72,6 +73,7 @@ const CoachDashboard = () => {
                                     ))}
                             </div>
                         </div>
+
                         {/* List of players in the right side of the screen and some featured stats */}
                         <div className='m-10'>
                             <h1 className='text-center text-4xl font-semibold'>Top Players</h1>
@@ -112,6 +114,7 @@ const CoachDashboard = () => {
                 </div>
             ) : (
                 <div>
+
                     {/* Upload information form*/}
                     <div>
                     <button onClick={handleIsUpload} className='rounded-xl border-2 border-black border-solid p-4 m-4 hover:bg-[#bfbfc4]'>Back</button>
