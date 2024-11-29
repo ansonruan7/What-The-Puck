@@ -9,6 +9,11 @@ function Layout ({children}) {
     const navigateCreateAccount = () => navigate('/CreateAccount');
     const navigateLogin =() => navigate('/Login');
     const navigateUserPortal =() => navigate('/AuthUser');
+
+    // Temporary code
+    const navigateCoachDashboard = () => navigate("/CoachDashboard");
+    const navigateAdminDashboard = () => navigate("/AdminDashboard");
+
     const { logoutUser } = useUser();
 
 
@@ -30,6 +35,8 @@ function Layout ({children}) {
                 <a href="#" onClick={navigateHome}>Home</a>
                 <a href="#" onClick={navigateUserPortal}>User Portal</a>
                 <a href="#" onClick={navigateLogin}>Log in</a>
+                <a href="#" onClick={navigateCoachDashboard}>Coach Dashboard</a>
+                <a href="#" onClick={navigateAdminDashboard}>Admin Dashboard</a>
             </div>
             <div className="cartButtonStyle">
                     <a href="#" className="buttonTextStyle" onClick={navigateCreateAccount}>
