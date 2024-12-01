@@ -15,7 +15,6 @@ const jwt = require('jsonwebtoken');
 
 const { ObjectId } = require('mongodb');
 
-
 mongoose.connect('mongodb+srv://dkorkut:danielwestern@cluster0.xxodj.mongodb.net/WHATTHEPUCK', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -52,6 +51,18 @@ const User = mongoose.model('User', {
   verified: {type: Boolean, default: false},
   role_verified: {type: Boolean, default: false},
   isAdmin: {type: Boolean, default: false},
+});
+
+const HOCKEYDATA = mongoose.model('HOCKEYDATA',{
+  player: {type: String, required: true},
+  category: {
+    type: String,
+    required: true,
+    enum: ["Shots", "Face-offs"],
+  },
+  //position: {type: Object, coordinates: {x: Double, y: Double}},
+  value: {type: Number, required: true},
+  data_verified: {type: Boolean, default: false}
 })
 
 passport.use(new LocalStrategy({usernameField: 'email', passReqToCallback: true}, async function verify(req, email, password, cb) {
@@ -259,10 +270,8 @@ app.get('/api/verify_role', async (req, res) => {
 
 // Request that pushes the decision of the admin
 app.post('/api/role_decision', async (req, res) => {
-  console.log('request sent');
   const {_id, approved} = req.body;
-  console.log(_id, approved);
-  const id = new ObjectId(req.body._id);
+  const id = new ObjectId(req.body._id); // Converts to MongoDB ObjectId
   try{
     const result = await User.updateOne(
       { _id:  id},
@@ -274,6 +283,51 @@ app.post('/api/role_decision', async (req, res) => {
   }
 });
 
+// Coach/Manager data pushing function
+app.post('/api/push_data', async (req, res) => {
+  const { player, category, value } = req.body;
+  // Object to be inserted
+  const doc = {
+    player: player,
+    category: category,
+    value: value
+  };
+  try {
+    const result = await HOCKEYDATA.insertMany(doc);
+    res.status(200).send("Upload Success!");
+  } catch (error) {
+    res.status(500).send("Error occured: " + error);
+  }
+});
+
+// Request that pulls all unverified data
+app.get('/api/verify_data', async (req, res) => {
+  try{
+    // Get all users that have not had their roles verified
+    const curs = await HOCKEYDATA.find({data_verified: false});
+    res.json(curs);
+  } catch (error){
+    console.error('Error fetching events:', error);
+    res.status(404).send('Error ' + error);
+  }
+});
+
+// Request that pushes the decision of the admin
+app.post('/api/data_decision', async (req, res) => {
+  const {_id, approved} = req.body;
+  const id = new ObjectId(req.body._id);
+  try{
+    const result = await HOCKEYDATA.updateOne(
+      { _id:  id},
+      { $set: { data_verified: req.body.approved } }
+    );
+    res.json(result);
+  } catch (error){
+    console.log("Error occured: " + error);
+  }
+});
+
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
+

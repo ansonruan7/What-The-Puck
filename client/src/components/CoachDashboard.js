@@ -4,7 +4,8 @@ import temp_picture from "../assets/TempPhoto.jpg";
 
 const CoachDashboard = () => {
 
-    let playerCards = [
+    // Temporarily hard-coded
+    let team = [
         {
             "playerName": "Henrik Lundqvist",
             "position": "G"
@@ -43,10 +44,31 @@ const CoachDashboard = () => {
         }
     ]
     
+    // Page management
     const [isUpload, setIsUpload] = useState(false);
     const handleIsUpload = () => {setIsUpload(!isUpload)};
 
+    // Data upload variables
     const [category, setCategory] = useState('');
+    const [player, setPlayer] = useState('');
+    const [value, setValue] = useState('');
+    const [resultMessage, setResultMessage] = useState('');
+
+    const handleDataSubmission = async () => {
+        try{
+            const response = await fetch('/api/push_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({player: player, category: category, value: value})
+            });
+            const responseData = await response.json();
+            setResultMessage(responseData.message);
+        } catch (error){
+            console.log("Error occured: " + error);
+        }        
+    }
 
     return(
         <div>
@@ -63,12 +85,12 @@ const CoachDashboard = () => {
 
                             {/* Contains all player cards */}
                             <div className='grid grid-cols-3 grid-rows-3'>
-                                {playerCards.map((player, index) => (
+                                {team.map((player, index) => (
                                         <li key={index} className='p-4 border-2 border-solid border-black rounded-xl m-2 flex flex-col items-center'>
                                             {/* Player Image */}
                                             <img src={temp_picture} alt={player.playerName} className='w-32 h-32 mb-4' /> 
-                                            <p className='font-bold'>{player.playerName}</p>
-                                            <p className='italic'>{player.position}</p>
+                                            <h2 className='font-bold'>{player.playerName}</h2>
+                                            <h2 className='italic'>{player.position}</h2>
                                         </li>
                                     ))}
                             </div>
@@ -114,22 +136,42 @@ const CoachDashboard = () => {
                 </div>
             ) : (
                 <div>
-
                     {/* Upload information form*/}
-                    <div>
                     <button onClick={handleIsUpload} className='rounded-xl border-2 border-black border-solid p-4 m-4 hover:bg-[#bfbfc4]'>Back</button>
-                        <div className="h-screen text-center justify-center">
-                            <label htmlFor="">Please Select A Category:</label>
-                            <select  
-                                onChange={(e) => setCategory(e.target.value)} 
-                                defaultValue="" // Ensures no role is selected by default
-                            >
-                                <option value="" disabled>Select a category</option>
-                                <option value="Coach/Manager">Coach/Manager</option>
-                                <option value="Player">Player</option>
-                                <option value="Admin">Admin</option>
-                            </select>
+                    <div className='grid justify-center'>
+                        <div className="text-center justify-center bg-white w-fit p-4 rounded-lg drop-shadow-md shadow-xl">
+                            <div className="my-4">
+                                <label htmlFor="">Please Select A Player: </label>
+                                <select  
+                                    onChange={(e) => setPlayer(e.target.value)} 
+                                    defaultValue="" // Ensures no role is selected by default
+                                >
+                                    <option value="" disabled>Select a player</option>
+                                    {team.map((player, index) => {
+                                            return(
+                                                <option key={index} value={player.playerName}>{player.playerName}</option>
+                                            );
+                                        })}
+                                </select>
+                            </div>
+                            <div className="my-4">
+                                <label htmlFor="">Please Select A Category: </label>
+                                <select  
+                                    onChange={(e) => setCategory(e.target.value)} 
+                                    defaultValue="" // Ensures no role is selected by default
+                                >
+                                    <option value="" disabled>Select a category</option>
+                                    <option value="Shots">Shots</option>
+                                    <option value="Face-offs">Face-offs</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label htmlFor="">Data value: </label>
+                                <input onChange={(e) => setValue(e.target.value)} className='border-2 border-solid border-black p-1' type='text' placeholder='Value'></input>
+                            </div>
                         </div>
+                        <button onClick={handleDataSubmission} className='rounded-xl border-2 border-black border-solid p-4 my-8 hover:bg-[#bfbfc4]'>Submit</button>
+                        <p className='w-full'>{resultMessage}</p>
                     </div>
                 </div>
             )}

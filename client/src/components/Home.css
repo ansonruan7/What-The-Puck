@@ -1,4 +1,4 @@
-/* p {
+p {
     font-family: 'Roboto', sans-serif;
     font-size: 1.1rem; 
     color: #444; 
@@ -12,7 +12,7 @@
     border-left: 4px solid #ff8a00; 
     border-radius: 4px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-} */
+}
 
 .description {
     display: flex;
