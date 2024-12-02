@@ -28,12 +28,11 @@ This project is a platform designed to provide insights and strategic feedback f
 
 ## Technology Stack
 - **Frontend**: React.js
-- **Backend**: Node.js, Express
-- **Database**: PostgreSQL
-- **Machine Learning**: TensorFlow/PyTorch
+- **Backend**: 
+- **Database**: 
+- **Machine Learning**: 
 - **Version Control**: GitHub
-- **Project Management**: Jira
-- **Communication Tools**: Facebook Messenger, Google Drive
+- **Project Management**: Discord
 
 ## Sprint Goals
 ### Sprint 1
