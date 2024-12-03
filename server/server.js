@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -12,6 +13,7 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 
 const { ObjectId } = require('mongodb');
 
@@ -119,17 +121,17 @@ passport.deserializeUser(async (id, done) => {
 });
 
 
-app.post('/api/signup', async(req, res) => {
-  try{
-    const {email, password, username, role} = req.body;
+app.post('/api/signup', async (req, res) => {
+  try {
+    const { email, password, username, role } = req.body;
 
-    if(!validator.isEmail(email) || password.length < 6){
-      return res.status(400).json({message: 'Invalid email or password format'});
+    if (!validator.isEmail(email) || password.length < 6) {
+      return res.status(400).json({ message: 'Invalid email or password format' });
     }
 
-    const existingUser = await User.findOne({email});
-    if(existingUser){
-      return res.status(409).json({message: 'Email already exists'});
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already exists' });
     }
 
     const saltRounds = 10;
@@ -145,15 +147,33 @@ app.post('/api/signup', async(req, res) => {
     });
 
     await newUser.save();
-    const verificationLink = `http://${req.headers.host}/api/verify/${email}/${newUser._id}`
 
-    return res.status(201).json({message: `Registeration Success. Use Verification Link ${verificationLink} to verify account`});
-  }catch(error){
+    // Create the verification link
+    const verificationLink = `http://${req.headers.host}/api/verify/${email}/${newUser._id}`;
+
+    // Send the verification email using Nodemailer
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Please Verify Your Email',
+      html: `<p>Click <a href="${verificationLink}">here</a> to verify your email and complete your registration.</p>`,
+    };
+
+    // Send the email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email: ', error);
+        return res.status(500).json({ message: 'Error sending verification email' });
+      } else {
+        console.log('Verification email sent: ', info.response);
+        return res.status(201).json({ message: `Registration Success. Please check your email to verify your account.` });
+      }
+    });
+  } catch (error) {
     console.error(error);
-    return res.status(500).json({message: 'Internal Server Error'});
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 });
-
 
 app.get('/api/verify/:email/:userId', async (req, res) => {
   const {email, userId} = req.params;
@@ -326,6 +346,31 @@ app.post('/api/data_decision', async (req, res) => {
     console.log("Error occured: " + error);
   }
 });
+
+// Nodemailer configuration
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,  // Using environment variable
+    pass: process.env.EMAIL_PASS,  // Using environment variable
+  }
+});
+
+// JWT Secret
+const jwtSecret = process.env.JWT_SECRET || 'default_secret_key';  // Use .env or default to 'default_secret_key'
+
+// MongoDB URI
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => {
+      console.log('DB Connected');
+  })
+  .catch((e) => {
+      console.log('DB not Connected', e);
+  });
+
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
