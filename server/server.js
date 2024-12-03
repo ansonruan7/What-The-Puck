@@ -356,6 +356,26 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// Fetch Player Data (Shots, Face-offs, etc.)
+app.get('/api/player/dashboard/:playerId', async (req, res) => {
+  try {
+    const { playerId } = req.params;
+
+    // Fetch the player's data from the HOCKEYDATA collection
+    const playerData = await HOCKEYDATA.find({ player: playerId });
+
+    if (!playerData || playerData.length === 0) {
+      return res.status(404).json({ message: 'No data found for this player' });
+    }
+
+    res.json(playerData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching player data' });
+  }
+});
+
+
 // JWT Secret
 const jwtSecret = process.env.JWT_SECRET || 'default_secret_key';  // Use .env or default to 'default_secret_key'
 

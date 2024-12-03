@@ -12,6 +12,7 @@ function Layout({ children }) {
 
     // Temporary code for navigation
     const navigateCoachDashboard = () => navigate('/CoachDashboard');
+    const navigatePlayerDashboard = () => navigate('/PlayerDashboard');  // Added Player Dashboard navigation
     const navigateAdminDashboard = () => navigate('/AdminDashboard');
 
     const { user, logoutUser } = useUser();
@@ -35,6 +36,7 @@ function Layout({ children }) {
                     <a href="#" onClick={navigateLogin}>Login</a>
                 )}
                 <a href="#" onClick={navigateCoachDashboard}>Coach Dashboard</a>
+                <a href="#" onClick={navigatePlayerDashboard}>Player Dashboard</a> {/* Added Player Dashboard link */}
                 <a href="#" onClick={navigateAdminDashboard}>Admin Dashboard</a>
             </div>
 
