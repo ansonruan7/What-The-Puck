@@ -1,61 +1,97 @@
-import { useEffect, React, useState } from 'react';
-import "../index.css";
-import temp_picture from "../assets/TempPhoto.jpg";
+import { React, useState } from "react";
 
 const PlayerDashboard = () => {
-    const [playerData, setPlayerData] = useState([]);
-    const [error, setError] = useState('');
-  
-    useEffect(() => {
-      // Fetch all players' data when the component mounts
-      const fetchPlayerData = async () => {
-        try {
-          const response = await fetch('/api/player/dashboard');
-          const data = await response.json();
-  
-          if (response.ok) {
-            setPlayerData(data);
-          } else {
-            setError(data.message || 'An error occurred while fetching data.');
-          }
-        } catch (error) {
-          setError('Failed to fetch player data.');
-        }
-      };
-  
-      fetchPlayerData();
-    }, []);
-  
-    return (
-      <div>
-        <h2>Player Dashboard</h2>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <table className="table-auto w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="p-2 border-b">Player</th>
-              <th className="p-2 border-b">Category</th>
-              <th className="p-2 border-b">Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {playerData.length > 0 ? (
-              playerData.map((data) => (
-                <tr key={data._id}>
-                  <td className="p-2 border-b">{data.player}</td>
-                  <td className="p-2 border-b">{data.category}</td>
-                  <td className="p-2 border-b">{data.value}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="3" className="p-2 text-center">No data available</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    );
+  const [playerData, setPlayerData] = useState([]);
+  const [isDataVisible, setIsDataVisible] = useState(false);
+
+  const handleDataToggle = () => {
+    fetchPlayerData();
+    setIsDataVisible(!isDataVisible);
   };
-  
-  export default PlayerDashboard;
+
+  // Fetch Player Data
+  const fetchPlayerData = async () => {
+    try {
+      const response = await fetch("/api/player/dashboard", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setPlayerData(data);
+      } else {
+        console.error("Failed to fetch player data:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching player data:", error);
+    }
+  };
+
+  return (
+    <div>
+      {isDataVisible ? (
+        <div>
+          {/* Navigation Tabs */}
+          <div className="flex justify-between drop-shadow-xl bg-slate-300">
+            <button
+              onClick={handleDataToggle}
+              className="rounded-xl border-2 border-black border-solid p-4 m-4 hover:bg-[#bfbfc4]"
+            >
+              Back
+            </button>
+          </div>
+
+          {/* Player Data Table */}
+          <div>
+            {playerData.length > 0 ? (
+              <ul>
+                {playerData.map((data, index) => (
+                  <li
+                    key={index}
+                    className="list-none flex text-center items-center justify-between m-16 p-8 border-2 border-black border-solid drop-shadow-lg rounded-md"
+                  >
+                    <p className="font-bold">Player: {data.player}</p>
+                    <p className="font-bold">Category: {data.category}</p>
+                    <p className="font-bold">Value: {data.value}</p>
+                    <p className="font-bold">
+                      Data Verified: {data.data_verified ? "Yes" : "No"}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center">No data available</p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div>
+          {/* Navigation Tabs */}
+          <div className="flex justify-between drop-shadow-xl bg-slate-300">
+            <a href="/">
+              <button className="rounded-xl border-2 border-black border-solid p-4 m-4 hover:bg-[#bfbfc4]">
+                Back
+              </button>
+            </a>
+          </div>
+
+          {/* Button to Access Player Data */}
+          <div>
+            <button
+              onClick={handleDataToggle}
+              className="p-4 m-8 border-2 border-solid border-black rounded-xl hover:bg-[#bfbfc4]"
+            >
+              View Player Data
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PlayerDashboard;

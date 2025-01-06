@@ -1,4 +1,7 @@
-require('dotenv').config();
+require('dotenv').config(); // Load environment variables
+console.log('Environment Variables Loaded:');
+console.log('EMAIL_USER:', process.env.EMAIL_USER); // Debug email user
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS); // Debug email password
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -348,6 +351,9 @@ app.post('/api/data_decision', async (req, res) => {
 });
 
 // Nodemailer configuration
+console.log("11111");
+console.log('Email User:', process.env.EMAIL_USER); // Debug email user
+console.log('Email Pass:', process.env.EMAIL_PASS); // Debug email password
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -356,22 +362,27 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Fetch Player Data (Shots, Face-offs, etc.)
-app.get('/api/player/dashboard/:playerId', async (req, res) => {
+app.get('/api/player/dashboard', async (req, res) => {
   try {
-    const { playerId } = req.params;
+    const playerId = req.query.playerid;
 
-    // Fetch the player's data from the HOCKEYDATA collection
-    const playerData = await HOCKEYDATA.find({ player: playerId });
+    let playerData;
+    if (playerId) {
+      // Fetch data for a specific player
+      playerData = await HOCKEYDATA.find({ player: playerId });
+    } else {
+      // Fetch all player data
+      playerData = await HOCKEYDATA.find();
+    }
 
     if (!playerData || playerData.length === 0) {
-      return res.status(404).json({ message: 'No data found for this player' });
+      return res.status(404).json({ message: 'No data found' });
     }
 
     res.json(playerData);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error fetching player data' });
+    console.error('Error fetching player data:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
