@@ -9,9 +9,9 @@ const Home = () =>{
 
 
     return (
-<Layout>
-
-</Layout>
+        <div className=''>
+            <Layout/>
+        </div>
     );
 }
 
