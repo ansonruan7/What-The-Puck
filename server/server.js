@@ -105,6 +105,27 @@ passport.use(new LocalStrategy({usernameField: 'email', passReqToCallback: true}
   }
 }));
 
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.status(401).json({ message: 'Unauthorized - No token provided' });
+  }
+
+  // Remove 'Bearer ' from the token string if it exists
+  const tokenString = token.startsWith('Bearer ') ? token.slice(7, token.length) : token;
+
+  jwt.verify(tokenString, process.env.JWT_SECRET, (err, decoded) => {  // Using environment variable for secret key
+    if (err) {
+      return res.status(401).json({ message: 'Unauthorized - Invalid token' });
+    }
+
+    // Attach the decoded user ID to the request object
+    req.userId = decoded.userId;
+    next();
+  });
+};
+
 passport.serializeUser((user, done) => {
   done(null, user._id.toString());
 });
@@ -261,24 +282,6 @@ app.put('/api/updatePassword', async (req, res) =>{
   }
 });
 
-
-const tokenVerification = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({message: 'Not Authorized: Missing or Malformed Token'});
-  }
-
-  const token = authHeader.split(' ')[1]; // Extract token
-  jwt.verify(token, 'your_secret_key', (err, decoded) => {
-      if (err) {
-          return res.status(401).json({message: 'Not Authorized: Invalid Token'});
-      }
-
-      req.userId = decoded.userId; // Attach decoded userId to req
-      next();
-  });
-};
-
 // Request that pulls all users with unverified roles
 app.get('/api/verify_role', async (req, res) => {
   try{
@@ -362,7 +365,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-app.get('/api/player/dashboard', async (req, res) => {
+app.get('/api/player/dashboard',verifyToken, async (req, res) => {
   try {
     const playerId = req.query.playerid;
 

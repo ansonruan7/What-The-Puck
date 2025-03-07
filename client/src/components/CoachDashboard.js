@@ -1,52 +1,37 @@
 import { React, useState } from 'react';
 import "../index.css";
 import temp_picture from "../assets/TempPhoto.jpg";
+import { useEffect } from "react";
 
 const CoachDashboard = () => {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);  // Set default state to false
+
+    useEffect(() => {
+        const token = localStorage.getItem("authToken");
+        if (token) {
+          // Optionally, validate token (e.g., check expiration) here
+          setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
+        }
+    }, []);
 
     // Temporarily hard-coded
     let team = [
-        {
-            "playerName": "Henrik Lundqvist",
-            "position": "G"
-        },
-        {
-            "playerName": "Jonathan Toews",
-            "position": "C"
-        },
-        {
-            "playerName": "Evgeni Malkin",
-            "position": "C"
-        },
-        {
-            "playerName": "Nikita Kucherov",
-            "position": "RW"
-        },
-        {
-            "playerName": "Steve Yzerman",
-            "position": "C"
-        },
-        {
-            "playerName": "Mark Messier",
-            "position": "C"
-        },
-        {
-            "playerName": "Joe Sakic",
-            "position": "C"
-        },
-        {
-            "playerName": "Teemu Selänne",
-            "position": "RW"
-        },
-        {
-            "playerName": "Pavel Datsyuk",
-            "position": "C"
-        }
-    ]
+        { "playerName": "Henrik Lundqvist", "position": "G" },
+        { "playerName": "Jonathan Toews", "position": "C" },
+        { "playerName": "Evgeni Malkin", "position": "C" },
+        { "playerName": "Nikita Kucherov", "position": "RW" },
+        { "playerName": "Steve Yzerman", "position": "C" },
+        { "playerName": "Mark Messier", "position": "C" },
+        { "playerName": "Joe Sakic", "position": "C" },
+        { "playerName": "Teemu Selänne", "position": "RW" },
+        { "playerName": "Pavel Datsyuk", "position": "C" }
+    ];
     
     // Page management
     const [isUpload, setIsUpload] = useState(false);
-    const handleIsUpload = () => {setIsUpload(!isUpload)};
+    const handleIsUpload = () => { setIsUpload(!isUpload) };
 
     // Data upload variables
     const [category, setCategory] = useState('');
@@ -55,30 +40,52 @@ const CoachDashboard = () => {
     const [resultMessage, setResultMessage] = useState('');
 
     const handleDataSubmission = async () => {
-        try{
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            setResultMessage("Error: You are not logged in.");
+            return; // Don't proceed without a token
+        }
+
+        try {
             const response = await fetch('/api/push_data', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({player: player, category: category, value: value})
+                body: JSON.stringify({ player: player, category: category, value: value })
             });
             const responseData = await response.json();
             setResultMessage(responseData.message);
-        } catch (error){
-            console.log("Error occured: " + error);
-        }        
-    }
+        } catch (error) {
+            console.log("Error occurred: " + error);
+            setResultMessage("Error: Data submission failed.");
+        }
+    };
 
-    return(
+    return (
         <div>
             {!isUpload ? (
                 <div>
                     {/* Navigation Tabs */}
                     <div className='flex justify-between drop-shadow-xl bg-slate-300'>
                         <a href='/'><button className='rounded-xl border-2 border-black border-solid p-4 m-4 hover:bg-[#bfbfc4]'>Back</button></a>
-                        <button onClick={handleIsUpload} className='rounded-xl border-2 border-black border-solid p-4 m-4 hover:bg-[#bfbfc4]'>Upload Information</button>
+                        <button 
+                            onClick={handleIsUpload} 
+                            className='rounded-xl border-2 border-black border-solid p-4 m-4 hover:bg-[#bfbfc4]'
+                            disabled={!isLoggedIn} // Disable the button if not logged in
+                        >
+                            Upload Information
+                        </button>
                     </div>
+
+                    {/* Show message if user is not logged in */}
+                    {!isLoggedIn && (
+                        <div className="text-center text-red-500 mt-4">
+                            <p>Please log in to upload data.</p>
+                        </div>
+                    )}
+
                     <div className='grid grid-cols-3'>
                         <div className='col-span-2 m-10'>
                             <h1 className='text-center text-4xl font-semibold'>My Team</h1>
@@ -100,36 +107,15 @@ const CoachDashboard = () => {
                         <div className='m-10'>
                             <h1 className='text-center text-4xl font-semibold'>Top Players</h1>
                             <ul className='my-10'>
+                                {/* Display top players */}
+                                {/* You can list more top players here */}
                                 <li className='p-4 border-2 border-solid border-black rounded-xl m-2'>
                                     Wayne Gretzky
                                 </li>
                                 <li className='p-4 border-2 border-solid border-black rounded-xl m-2'>
                                     Mario Lemieux
                                 </li>
-                                <li className='p-4 border-2 border-solid border-black rounded-xl m-2'>
-                                    Sidney Crosby
-                                </li>
-                                <li className='p-4 border-2 border-solid border-black rounded-xl m-2'>
-                                    Alex Ovechkin
-                                </li>
-                                <li className='p-4 border-2 border-solid border-black rounded-xl m-2'>
-                                    Jaromír Jágr
-                                </li>
-                                <li className='p-4 border-2 border-solid border-black rounded-xl m-2'>
-                                    Bobby Orr
-                                </li>
-                                <li className='p-4 border-2 border-solid border-black rounded-xl m-2'>
-                                    Patrick Roy
-                                </li>
-                                <li className='p-4 border-2 border-solid border-black rounded-xl m-2'>
-                                    Gordie Howe
-                                </li>
-                                <li className='p-4 border-2 border-solid border-black rounded-xl m-2'>
-                                    Martin Brodeur
-                                </li>
-                                <li className='p-4 border-2 border-solid border-black rounded-xl m-2'>
-                                    Connor McDavid
-                                </li>
+                                {/* Add more players here */}
                             </ul>
                         </div>
                     </div>
