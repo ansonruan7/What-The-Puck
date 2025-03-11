@@ -172,25 +172,24 @@ app.post('/api/signup', async (req, res) => {
 
     await newUser.save();
 
-    // Create the verification link
     const verificationLink = `http://${req.headers.host}/api/verify/${email}/${newUser._id}`;
+    
+    // Return verification link in success response
+    res.status(201).json({ message: `Registration Success. Please Verify Your Email: ${verificationLink}` });
 
-    // Send the verification email using Nodemailer
+    //User has option to verify by link, or by email
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Please Verify Your Email',
-      html: `<p>Click <a href="${verificationLink}">here</a> to verify your email and complete your registration.</p>`,
+      html: `<p>Click <a href="${verificationLink}">here</a> to verify your email and complete your registration.</p>`
     };
 
-    // Send the email
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error('Error sending email: ', error);
-        return res.status(500).json({ message: 'Error sending verification email' });
       } else {
         console.log('Verification email sent: ', info.response);
-        return res.status(201).json({ message: `Registration Success. Please check your email to verify your account.` });
       }
     });
   } catch (error) {
@@ -198,6 +197,7 @@ app.post('/api/signup', async (req, res) => {
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 app.get('/api/verify/:email/:userId', async (req, res) => {
   const {email, userId} = req.params;
