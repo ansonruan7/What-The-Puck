@@ -431,8 +431,46 @@ app.get('/api/getPlayer', async (req, res) => {
   }
 });
 
+/* Helper Function */
+function timeToSeconds(timeStr) {
+  const [minutes, seconds] = timeStr.split(":").map(Number);
+  return minutes * 60 + seconds;
+}
 
+app.get('/api/getStatAverage', async (req, res) => {
+  try {
+    let data = await PLAYERDATA.find({}).lean();
 
+    if (data.length === 0) {
+      return res.status(404).json({ message: `No data found.` });
+    }
+    
+    let averages = {};
+    let count = data.length;
+
+    //Add values together to prepare to average
+    data.forEach(player => {
+      Object.entries(player).forEach(([key, value]) => {
+          if (typeof value === "number") {
+              averages[key] = (averages[key] || 0) + value;
+          } else if (key === "icetime" && typeof value === "string") {  
+              // Convert "MM:SS" to seconds
+              averages["icetime"] = (averages["icetime"] || 0) + timeToSeconds(value);
+          }
+      });
+  });
+
+    // Get the real average
+    Object.entries(averages).forEach(([key, value]) => {
+      averages[key] = value/count;
+    })
+
+    res.send(averages);
+  } catch (error) {
+    console.error('Error fetching player data:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
 
 // JWT Secret
 const jwtSecret = process.env.JWT_SECRET || 'default_secret_key';  // Use .env or default to 'default_secret_key'
