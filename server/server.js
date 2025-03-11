@@ -70,6 +70,24 @@ const HOCKEYDATA = mongoose.model('HOCKEYDATA',{
   data_verified: {type: Boolean, default: false}
 })
 
+
+
+const PLAYERDATA = mongoose.model('PLAYERDATA', {
+  full_name: { type: String, required: true }, // Full name of the player
+  goals: { type: Number, required: true, default: 0 },
+  shots: { type: Number, required: true, default: 0 },
+  assists: { type: Number, required: true, default: 0 },
+  blocks: { type: Number, required: true, default: 0 },
+  pim: { type: Number, required: true, default: 0 }, // Penalty minutes
+  turnovers: { type: Number, required: true, default: 0 },
+  takeaways: { type: Number, required: true, default: 0 },
+  faceoff_wins: { type: Number, required: true, default: 0 },
+  faceoff_losses: { type: Number, required: true, default: 0 },
+  icetime: { type: String, required: true }, // Ice time stored as "MM:SS"
+  data_verified: { type: Boolean, default: false }
+});
+
+
 passport.use(new LocalStrategy({usernameField: 'email', passReqToCallback: true}, async function verify(req, email, password, cb) {
   console.log(`${email} and ${password}`);
   host = req.host;
@@ -390,6 +408,32 @@ app.get('/api/player/dashboard',verifyToken, async (req, res) => {
 });
 
 
+app.get('/api/getPlayer', async (req, res) => {
+  const { playerName } = req.query; // Extract player name from query parameters
+
+  if (!playerName) {
+    return res.status(400).json({ message: 'Please provide a player name.' });
+  }
+
+  try {
+    const playerData = await PLAYERDATA.find({
+      player: { $regex: new RegExp(playerName, 'i') } // Case-insensitive partial match
+    });
+
+    if (!playerData || playerData.length === 0) {
+      return res.status(404).json({ message: `No data found for player: ${playerName}` });
+    }
+
+    res.status(200).json({ playerData }); // Return array of matching players
+  } catch (error) {
+    console.error('Error fetching player data:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+
+
+
 // JWT Secret
 const jwtSecret = process.env.JWT_SECRET || 'default_secret_key';  // Use .env or default to 'default_secret_key'
 
@@ -409,4 +453,3 @@ mongoose.connect(process.env.MONGO_URI, {
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
-
