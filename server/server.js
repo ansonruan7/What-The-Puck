@@ -43,19 +43,51 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 const User = mongoose.model('User', {
-  email: {type: String, required: true, unique: true},
-  password: {type: String, required: true},
-  username: {type: String, required: true},
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  username: { type: String, required: true },
   role: {
-    type: String,
-    required: true,
-    enum: ['Coach/Manager', 'Player', 'Admin'],
+      type: String,
+      required: true,
+      enum: ['Coach/Manager', 'Player', 'Admin'],
   },
-  salt: {type: String, required: true},
-  disabled: {type: Boolean, default: false},
-  verified: {type: Boolean, default: false},
-  role_verified: {type: Boolean, default: false},
-  isAdmin: {type: Boolean, default: false},
+  team: {
+      type: String,
+      required: true,
+      enum: [
+          'N/A (ADMIN)',
+          'Anaheim Ducks', 'Arizona Coyotes', 'Boston Bruins',
+          'Buffalo Sabres', 'Calgary Flames', 'Carolina Hurricanes',
+          'Chicago Blackhawks', 'Colorado Avalanche', 'Columbus Blue Jackets',
+          'Dallas Stars', 'Detroit Red Wings', 'Edmonton Oilers',
+          'Florida Panthers', 'Los Angeles Kings', 'Minnesota Wild',
+          'Montreal Canadiens', 'Nashville Predators', 'New Jersey Devils',
+          'New York Islanders', 'New York Rangers', 'Ottawa Senators',
+          'Philadelphia Flyers', 'Pittsburgh Penguins', 'San Jose Sharks',
+          'Seattle Kraken', 'St. Louis Blues', 'Tampa Bay Lightning',
+          'Toronto Maple Leafs', 'Vancouver Canucks', 'Vegas Golden Knights',
+          'Washington Capitals', 'Winnipeg Jets'
+      ]
+  },
+  salt: { type: String, required: true },
+  disabled: { type: Boolean, default: false },
+  verified: { type: Boolean, default: false },
+  role_verified: { type: Boolean, default: false },
+  isAdmin: { type: Boolean, default: false },
+
+  // Player Data Fields
+  games: { type: Number, default: 0 },
+  goals: { type: Number, default: 0 },
+  shots: { type: Number, default: 0 },
+  assists: { type: Number, default: 0 },
+  blocks: { type: Number, default: 0 },
+  pim: { type: Number, default: 0 }, // Penalty minutes
+  turnovers: { type: Number, default: 0 },
+  takeaways: { type: Number, default: 0 },
+  faceoff_wins: { type: Number, default: 0 },
+  faceoff_losses: { type: Number, default: 0 },
+  icetime: { type: String, default: '00:00' }, // Stored as "MM:SS"
+  data_verified: { type: Boolean, default: false }
 });
 
 const HOCKEYDATA = mongoose.model('HOCKEYDATA',{
@@ -70,23 +102,12 @@ const HOCKEYDATA = mongoose.model('HOCKEYDATA',{
   data_verified: {type: Boolean, default: false}
 })
 
-
-
-const PLAYERDATA = mongoose.model('PLAYERDATA', {
-  full_name: { type: String, required: true }, // Full name of the player
-  team: {type: String, required: true},
-  games: {type: Number, require: true},
-  goals: { type: Number, required: true, default: 0 },
-  shots: { type: Number, required: true, default: 0 },
-  assists: { type: Number, required: true, default: 0 },
-  blocks: { type: Number, required: true, default: 0 },
-  pim: { type: Number, required: true, default: 0 }, // Penalty minutes
-  turnovers: { type: Number, required: true, default: 0 },
-  takeaways: { type: Number, required: true, default: 0 },
-  faceoff_wins: { type: Number, required: true, default: 0 },
-  faceoff_losses: { type: Number, required: true, default: 0 },
-  icetime: { type: String, required: true }, // Ice time stored as "MM:SS"
-  data_verified: { type: Boolean, default: false }
+const TEAMDATA = mongoose.model('TEAMDATA', {
+  team: { type: String, required: true },             // Team name
+  goals_for: { type: Number, required: true, default: 0 }, // Total team goals
+  team_assists: { type: Number, required: true, default: 0 }, // Total team assists
+  team_pim: { type: Number, required: true, default: 0 }, // Total penalty minutes
+  goals_per_game: { type: Number, required: true, default: 0 } // Goals per game
 });
 
 
@@ -167,10 +188,30 @@ passport.deserializeUser(async (id, done) => {
 
 app.post('/api/signup', async (req, res) => {
   try {
-    const { email, password, username, role } = req.body;
+    const { email, password, username, role, team } = req.body;
 
     if (!validator.isEmail(email) || password.length < 6) {
       return res.status(400).json({ message: 'Invalid email or password format' });
+    }
+
+    // Ensure the provided team is valid
+    const validTeams = [
+      'N/A (ADMIN)',
+      'Anaheim Ducks', 'Arizona Coyotes', 'Boston Bruins', 'Buffalo Sabres',
+      'Calgary Flames', 'Carolina Hurricanes', 'Chicago Blackhawks', 'Colorado Avalanche',
+      'Columbus Blue Jackets', 'Dallas Stars', 'Detroit Red Wings', 'Edmonton Oilers',
+      'Florida Panthers', 'Los Angeles Kings', 'Minnesota Wild', 'Montreal Canadiens',
+      'Nashville Predators', 'New Jersey Devils', 'New York Islanders', 'New York Rangers',
+      'Ottawa Senators', 'Philadelphia Flyers', 'Pittsburgh Penguins', 'San Jose Sharks',
+      'Seattle Kraken', 'St. Louis Blues', 'Tampa Bay Lightning', 'Toronto Maple Leafs',
+      'Vancouver Canucks', 'Vegas Golden Knights', 'Washington Capitals', 'Winnipeg Jets'
+    ];
+
+    // Auto-assign 'N/A (ADMIN)' for Admins
+    const selectedTeam = role === 'Admin' ? 'N/A (ADMIN)' : team;
+
+    if (!validTeams.includes(selectedTeam)) {
+      return res.status(400).json({ message: 'Invalid team selection.' });
     }
 
     const existingUser = await User.findOne({ email });
@@ -187,17 +228,16 @@ app.post('/api/signup', async (req, res) => {
       password: hashedPassword,
       username,
       role,
+      team: selectedTeam,  // Added team field
       salt
     });
 
     await newUser.save();
 
     const verificationLink = `http://${req.headers.host}/api/verify/${email}/${newUser._id}`;
-    
-    // Return verification link in success response
+
     res.status(201).json({ message: `Registration Success. Please Verify Your Email: ${verificationLink}` });
 
-    //User has option to verify by link, or by email
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -212,11 +252,13 @@ app.post('/api/signup', async (req, res) => {
         console.log('Verification email sent: ', info.response);
       }
     });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 
 app.get('/api/verify/:email/:userId', async (req, res) => {
@@ -331,47 +373,92 @@ app.post('/api/role_decision', async (req, res) => {
 
 // Coach/Manager data pushing function
 app.post('/api/push_data', async (req, res) => {
-  const { player, category, value } = req.body;
-  // Object to be inserted
-  const doc = {
-    player: player,
-    category: category,
-    value: value
-  };
+  const { player, games, goals, shots, assists, blocks, pim, turnovers, takeaways, faceoff_wins, faceoff_losses, icetime } = req.body;
+
+  // Validation: Check if all fields are provided
+  if (!player || !games || !goals || !shots || !assists || !blocks || !pim || !turnovers || !takeaways || !faceoff_wins || !faceoff_losses || !icetime) {
+      return res.status(400).json({ message: "Error: Please fill in all fields before submitting." });
+  }
+
   try {
-    const result = await HOCKEYDATA.insertMany(doc);
-    res.status(200).send("Upload Success!");
+      const playerData = await User.findOne({ username: player, role: 'Player' });
+
+      if (!playerData) {
+          return res.status(404).json({ message: "Player not found." });
+      }
+
+      // Update the player's stats in the User model
+      await User.updateOne(
+          { username: player },
+          {
+              $set: {
+                  games: Number(games) || 0,
+                  goals: Number(goals) || 0,
+                  shots: Number(shots) || 0,
+                  assists: Number(assists) || 0,
+                  blocks: Number(blocks) || 0,
+                  pim: Number(pim) || 0,
+                  turnovers: Number(turnovers) || 0,
+                  takeaways: Number(takeaways) || 0,
+                  faceoff_wins: Number(faceoff_wins) || 0,
+                  faceoff_losses: Number(faceoff_losses) || 0,
+                  icetime: icetime || '00:00',
+                  data_verified: false // Flag for admin review
+              }
+          }
+      );
+
+      res.status(200).json({ message: "Upload Success! Data pending admin verification." });
   } catch (error) {
-    res.status(500).send("Error occured: " + error);
+      console.error('Error updating player data:', error);
+      res.status(500).json({ message: "Error occurred: " + error });
   }
 });
+
+
 
 // Request that pulls all unverified data
+// GET: Retrieve all users with unverified data
 app.get('/api/verify_data', async (req, res) => {
-  try{
-    // Get all users that have not had their roles verified
-    const curs = await HOCKEYDATA.find({data_verified: false});
-    res.json(curs);
-  } catch (error){
-    console.error('Error fetching events:', error);
-    res.status(404).send('Error ' + error);
+  try {
+    const unverifiedUsers = await User.find({ data_verified: false });
+
+    if (!unverifiedUsers || unverifiedUsers.length === 0) {
+      return res.status(404).json({ message: 'No unverified data found.' });
+    }
+
+    res.status(200).json(unverifiedUsers);
+  } catch (error) {
+    console.error('Error fetching unverified data:', error);
+    res.status(500).json({ message: 'Server error occurred.', error: error.message });
   }
 });
 
-// Request that pushes the decision of the admin
+// POST: Update user verification status based on admin's decision
 app.post('/api/data_decision', async (req, res) => {
-  const {_id, approved} = req.body;
-  const id = new ObjectId(req.body._id);
-  try{
-    const result = await HOCKEYDATA.updateOne(
-      { _id:  id},
-      { $set: { data_verified: req.body.approved } }
+  const { _id, approved } = req.body;
+
+  if (!_id || typeof approved === 'undefined') {
+    return res.status(400).json({ message: 'Invalid request. Please provide _id and approved status.' });
+  }
+
+  try {
+    const result = await User.updateOne(
+      { _id: _id }, // Directly use _id since Mongoose automatically handles ObjectId conversion
+      { $set: { data_verified: approved } }
     );
-    res.json(result);
-  } catch (error){
-    console.log("Error occured: " + error);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    res.status(200).json({ message: `User ${approved ? 'approved' : 'rejected'} successfully.` });
+  } catch (error) {
+    console.error('Error updating data verification:', error);
+    res.status(500).json({ message: 'Error occurred while updating data verification.', error: error.message });
   }
 });
+
 
 // Nodemailer configuration
 console.log("11111");
@@ -410,28 +497,49 @@ app.get('/api/player/dashboard',verifyToken, async (req, res) => {
 });
 
 
-app.get('/api/getPlayer', async (req, res) => {
-  const { playerName } = req.query; // Extract player name from query parameters
+app.get('/api/players', async (req, res) => {
+  try {
+      const players = await User.find(
+          { role: 'Player', role_verified: true },  // Filter for verified players
+          { username: 1, _id: 0 }                   // Return only usernames
+      );
 
-  if (!playerName) {
-    return res.status(400).json({ message: 'Please provide a player name.' });
+      if (!players || players.length === 0) {
+          return res.status(404).json({ message: 'No verified players found.' });
+      }
+
+      res.status(200).json(players);
+  } catch (error) {
+      console.error('Error fetching player data:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+
+
+app.get('/api/getTeam', async (req, res) => {
+  const { teamName } = req.query; // Extract team name from query parameters
+
+  if (!teamName) {
+    return res.status(400).json({ message: 'Please provide a team name.' });
   }
 
   try {
-    const playerData = await PLAYERDATA.find({
-      player: { $regex: new RegExp(playerName, 'i') } // Case-insensitive partial match
+    const teamData = await TEAMDATA.findOne({
+      team: { $regex: new RegExp(`^${teamName}$`, 'i') } // Case-insensitive match
     });
 
-    if (!playerData || playerData.length === 0) {
-      return res.status(404).json({ message: `No data found for player: ${playerName}` });
+    if (!teamData) {
+      return res.status(404).json({ message: `No data found for team: ${teamName}` });
     }
 
-    res.status(200).json({ playerData }); // Return array of matching players
+    res.status(200).json({ teamData }); // Return team data
   } catch (error) {
-    console.error('Error fetching player data:', error);
+    console.error('Error fetching team data:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 /* Helper Function */
 function timeToSeconds(timeStr) {
