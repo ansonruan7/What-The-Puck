@@ -75,6 +75,7 @@ const HOCKEYDATA = mongoose.model('HOCKEYDATA',{
 const PLAYERDATA = mongoose.model('PLAYERDATA', {
   full_name: { type: String, required: true }, // Full name of the player
   team: {type: String, required: true},
+  games: {type: Number, require: true},
   goals: { type: Number, required: true, default: 0 },
   shots: { type: Number, required: true, default: 0 },
   assists: { type: Number, required: true, default: 0 },

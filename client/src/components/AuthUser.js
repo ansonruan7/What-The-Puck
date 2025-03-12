@@ -103,6 +103,7 @@ const AuthUser = () => {
                   <h4 className="font-bold text-lg">{player.player}</h4>
                   <ul className="grid grid-cols-2 gap-2">
                     <li><strong>Team:</strong> {player.team}</li>
+                    <li><strong>Games:</strong> {player.games}</li>
                     <li><strong>Goals:</strong> {player.goals}</li>
                     <li><strong>Shots:</strong> {player.shots}</li>
                     <li><strong>Assists:</strong> {player.assists}</li>
