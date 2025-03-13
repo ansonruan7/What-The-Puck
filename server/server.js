@@ -582,6 +582,45 @@ app.get('/api/getStatAverage', async (req, res) => {
   }
 });
 
+const authenticateUser = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Not Authorized: Missing or Malformed Token' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, 'your_secret_key', (err, decoded) => {
+      if (err) {
+          return res.status(401).json({ message: 'Not Authorized: Invalid Token' });
+      }
+
+      req.user = decoded; // Attach decoded user data to `req`
+      next();
+  });
+};
+
+app.put('/api/update-profile', authenticateUser, async (req, res) => {
+  const { email, username, password } = req.body;
+  const userId = req.user.userId;
+
+  try {
+      const updateData = { email, username };
+      if (password) {
+          const salt = await bcrypt.genSalt(10);
+          updateData.password = await bcrypt.hash(password, salt);
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true }); // ✅ Return updated user
+
+      res.json({
+          message: 'Profile updated successfully.',
+          user: updatedUser,  // ✅ Send updated user data to frontend
+      });
+  } catch (error) {
+      res.status(500).json({ message: 'Error updating profile.' });
+  }
+});
+
 // JWT Secret
 const jwtSecret = process.env.JWT_SECRET || 'default_secret_key';  // Use .env or default to 'default_secret_key'
 
