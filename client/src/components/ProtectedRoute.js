@@ -5,13 +5,20 @@ import { useUser } from './UserContext';
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const { user } = useUser();
 
-    // If the user is not logged in, redirect to the homepage
+    // 1️⃣ Wait for `user` to load before making a decision
+    if (user === undefined) {
+        return null; // Don't render anything yet
+    }
+
+    // 2️⃣ If no user is found, redirect to homepage
     if (!user) {
+        console.warn("User not found. Redirecting...");
         return <Navigate to="/" replace />;
     }
 
-    // If the user's role is not in the allowedRoles, redirect to the homepage
+    // 3️⃣ If user is not in the allowed roles, redirect
     if (!allowedRoles.includes(user.role)) {
+        console.warn(`User role (${user.role}) not allowed. Redirecting...`);
         return <Navigate to="/" replace />;
     }
 

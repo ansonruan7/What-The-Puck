@@ -23,6 +23,7 @@ function Navbar() {
             <div className='w-full bg-[#343434] p-2 text-white flex items-center justify-between'>
                 <img src={logo} className='w-12 h-12'/>
                 <ul className='flex justify-end gap-4'>
+                    
                     <a className='hover:bg-[#3c3b3b]' href='#' onClick={navigateHome}><li>Home</li></a>         
                     <a className='hover:bg-[#3c3b3b]' href='#' onClick={()=>{}}><li>About</li></a> 
                     <a className='hover:bg-[#3c3b3b]' href='#' onClick={()=>{}}><li>Dashboard</li></a> 

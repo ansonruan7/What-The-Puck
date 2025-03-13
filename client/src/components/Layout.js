@@ -12,13 +12,7 @@ function Layout({ children }) {
     const navigateAdminDashboard = () => navigate('/AdminDashboard');
     const navigateAverages = () => navigate('/Averages');
 
-    const { user, logoutUser } = useUser();
-
-    const handleLogout = () => {
-        logoutUser();
-        localStorage.removeItem('token');
-        navigate('/login');
-    };
+    const { user } = useUser();
 
     return (
         <>
@@ -30,8 +24,9 @@ function Layout({ children }) {
                 <div className="nav-links">
                     {user && <a href="#" onClick={navigateUserPortal}>User Portal</a>}
 
-                    {user?.role === 'Player' && (
+                    {user?.role != null && (
                         <>
+                            <a href="/profile">Profile</a>
                             <a href="#" onClick={navigatePlayerDashboard}>Player Dashboard</a>
                             <a href="#" onClick={navigateAverages}>Averages</a>
                         </>

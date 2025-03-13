@@ -10,6 +10,7 @@ import AdminDashboard from './components/AdminDashboard.js';
 import Averages from './components/Averages.js';
 import Navbar from './components/Navbar.js';
 import ProtectedRoute from './components/ProtectedRoute.js';
+import Profile from './components/Profile';
 
 function App() {
   return (
@@ -27,10 +28,19 @@ function App() {
           <Route 
             path="/PlayerDashboard" 
             element={
-              <ProtectedRoute allowedRoles={['Player']}>
+              <ProtectedRoute allowedRoles={['Player', 'Coach/Manager', 'Admin']}>
                 <PlayerDashboard />
               </ProtectedRoute>
             } 
+          />
+
+          <Route
+            path="/Profile"
+            element={
+              <ProtectedRoute allowedRoles={['Player', 'Coach/Manager', 'Admin']}>
+              <Profile />
+              </ProtectedRoute>
+            }
           />
 
           <Route 
