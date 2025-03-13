@@ -597,26 +597,35 @@ const authenticateUser = (req, res, next) => {
 };
 
 app.put('/api/update-profile', authenticateUser, async (req, res) => {
-  const { email, username, password } = req.body;
+  const { email, username, password, stats } = req.body;
   const userId = req.user.userId;
 
   try {
       const updateData = { email, username };
+
+      // Password update logic
       if (password) {
           const salt = await bcrypt.genSalt(10);
           updateData.password = await bcrypt.hash(password, salt);
       }
 
-      const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true }); // ✅ Return updated user
+      // Queue stat changes for admin approval
+      if (stats) {
+          updateData.pending_stats = stats; // Store unverified stats in a temporary field
+          updateData.data_verified = false; // Mark data as unverified
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
 
       res.json({
-          message: 'Profile updated successfully.',
-          user: updatedUser,  // ✅ Send updated user data to frontend
+          message: 'Profile updated successfully. Awaiting admin approval for stat changes.',
+          user: updatedUser
       });
   } catch (error) {
       res.status(500).json({ message: 'Error updating profile.' });
   }
 });
+
 
 // JWT Secret
 const jwtSecret = process.env.JWT_SECRET || 'default_secret_key';  // Use .env or default to 'default_secret_key'
