@@ -292,7 +292,7 @@ app.post('/api/login', async (req, res) => {
 
       // Check if the user is verified
       if (!user.verified) {
-          return res.status(403).json({ message: "Email not verified. Please check your email to verify your account." });
+          return res.status(403).json({ message: `Email not verified. Please check your email to verify your account. http://${req.headers.host}/api/verify/${email}/${user._id}` });
       }
 
       const passwordMatch = await bcrypt.compare(password, user.password);
