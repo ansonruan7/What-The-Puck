@@ -1,117 +1,99 @@
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
+import Layout from './Layout';
+import { useUser } from './UserContext';
 
 const PlayerDashboard = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);  // Set default state to false
-  const [playerData, setPlayerData] = useState([]);
-  const [isDataVisible, setIsDataVisible] = useState(false);
+    const { user } = useUser(); 
+    const [playerStats, setPlayerStats] = useState({
+        role: user?.role || '',
+        team: user?.team || '',
+        games: user?.games || 0,
+        goals: user?.goals || 0,
+        shots: user?.shots || 0,
+        assists: user?.assists || 0,
+        blocks: user?.blocks || 0,
+        pim: user?.pim || 0,
+        turnovers: user?.turnovers || 0,
+        takeaways: user?.takeaways || 0,
+        faceoff_wins: user?.faceoff_wins || 0,
+        faceoff_losses: user?.faceoff_losses || 0,
+        icetime: user?.icetime || '00:00',
+    });
 
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      // Optionally, validate token (e.g., check expiration) here
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
-    }
-  }, []);
+    const [isDataVisible, setIsDataVisible] = useState(false);
 
-  const handleDataToggle = () => {
-    fetchPlayerData();
-    setIsDataVisible(!isDataVisible);
-  };
+    useEffect(() => {
+        if (user) {
+            setPlayerStats({
+                role: user.role,
+                team: user.team,
+                games: user.games,
+                goals: user.goals,
+                shots: user.shots,
+                assists: user.assists,
+                blocks: user.blocks,
+                pim: user.pim,
+                turnovers: user.turnovers,
+                takeaways: user.takeaways,
+                faceoff_wins: user.faceoff_wins,
+                faceoff_losses: user.faceoff_losses,
+                icetime: user.icetime,
+            });
+        }
+    }, [user]);
 
-  const fetchPlayerData = async () => {
-    try {
-      const response = await fetch("/api/player/dashboard", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,  // Pass the token in the header
-        },
-      });
+    const handleDataToggle = () => {
+        setIsDataVisible(!isDataVisible);
+    };
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setPlayerData(data);
-      } else {
-        console.error("Failed to fetch player data:", data.message);
-      }
-    } catch (error) {
-      console.error("Error fetching player data:", error);
-    }
-  };
-
-  return (
-    <div>
-      {!isLoggedIn ? (
-        <div>
-          <p>You need to be logged in to view the player dashboard.</p>
-          <a href="/login">Go to Login</a> {/* Add a link to login */}
-        </div>
-      ) : (
-        <div>
-          {isDataVisible ? (
-            <div>
-              {/* Navigation Tabs */}
-              <div className="flex justify-between drop-shadow-xl bg-slate-300">
-                <button
-                  onClick={handleDataToggle}
-                  className="rounded-xl border-2 border-black border-solid p-4 m-4 hover:bg-[#bfbfc4]"
-                >
-                  Back
-                </button>
-              </div>
-
-              {/* Player Data Table */}
-              <div>
-                {playerData.length > 0 ? (
-                  <ul>
-                    {playerData.map((data, index) => (
-                      <li
-                        key={index}
-                        className="list-none flex text-center items-center justify-between m-16 p-8 border-2 border-black border-solid drop-shadow-lg rounded-md"
-                      >
-                        <p className="font-bold">Player: {data.player}</p>
-                        <p className="font-bold">Category: {data.category}</p>
-                        <p className="font-bold">Value: {data.value}</p>
-                        <p className="font-bold">
-                          Data Verified: {data.data_verified ? "Yes" : "No"}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
+    return (
+        <Layout>
+            <div className="profile-container p-6 max-w-2xl mx-auto bg-white rounded-xl shadow-md space-y-4">
+                {!isDataVisible ? (
+                    <div className="flex justify-center">
+                        <button
+                            onClick={handleDataToggle}
+                            className="p-4 m-8 border-2 border-solid border-black rounded-xl hover:bg-[#bfbfc4]"
+                        >
+                            View Player Data
+                        </button>
+                    </div>
                 ) : (
-                  <p className="text-center">No data available</p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div>
-              {/* Navigation Tabs */}
-              <div className="flex justify-between drop-shadow-xl bg-slate-300">
-                <a href="/">
-                  <button className="rounded-xl border-2 border-black border-solid p-4 m-4 hover:bg-[#bfbfc4]">
-                    Back
-                  </button>
-                </a>
-              </div>
+                    <div>
+                        {/* Info Section */}
+                        <div className="info-section bg-gray-100 p-4 rounded-lg">
+                            <h2 className="text-xl font-semibold mb-3">Player Stats</h2>
+                            <p><strong>Role:</strong> {playerStats.role}</p>
+                            <p><strong>Team:</strong> {playerStats.team}</p>
+                            <p><strong>Games Played:</strong> {playerStats.games}</p>
+                            <p><strong>Goals:</strong> {playerStats.goals}</p>
+                            <p><strong>Shots:</strong> {playerStats.shots}</p>
+                            <p><strong>Assists:</strong> {playerStats.assists}</p>
+                            <p><strong>Blocks:</strong> {playerStats.blocks}</p>
+                            <p><strong>Penalty Minutes:</strong> {playerStats.pim}</p>
+                            <p><strong>Turnovers:</strong> {playerStats.turnovers}</p>
+                            <p><strong>Takeaways:</strong> {playerStats.takeaways}</p>
+                            <p><strong>Faceoff Wins:</strong> {playerStats.faceoff_wins}</p>
+                            <p><strong>Faceoff Losses:</strong> {playerStats.faceoff_losses}</p>
+                            <p><strong>Ice Time:</strong> {playerStats.icetime}</p>
+                        </div>
 
-              {/* Button to Access Player Data */}
-              <div>
-                <button
-                  onClick={handleDataToggle}
-                  className="p-4 m-8 border-2 border-solid border-black rounded-xl hover:bg-[#bfbfc4]"
-                >
-                  View Player Data
-                </button>
-              </div>
+                        {/* Back Button */}
+                        <div className="flex justify-center">
+                            <button
+                                onClick={handleDataToggle}
+                                className="mt-4 w-full max-w-xs bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+                            >
+                                Back
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+        </Layout>
+    );
 };
 
 export default PlayerDashboard;
+
+
