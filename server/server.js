@@ -283,17 +283,24 @@ app.get('/api/verify/:email/:userId', async (req, res) => {
 });
 
 
-app.post('/api/login', async (req, res, next) => {
+app.post('/api/login', async (req, res) => {
   try {
       const { email, password } = req.body;
 
       const user = await User.findOne({ email });
       if (!user) return res.status(401).json({ message: "User not found" });
 
+      // Check if the user is verified
+      if (!user.verified) {
+          return res.status(403).json({ message: "Email not verified. Please check your email to verify your account." });
+      }
+
       const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) return res.status(401).json({ message: "Invalid password" });
 
       const token = jwt.sign({ userId: user._id }, 'your_secret_key', { expiresIn: '24h' });
+
+      console.log("Generated Token (Server):", token);  // ✅ Debugging
 
       res.status(200).json({ 
           message: "Login Successful",
