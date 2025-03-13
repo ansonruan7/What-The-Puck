@@ -2,18 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { useUser } from './UserContext';
 import Layout from './Layout';
 import { Link, useNavigate } from 'react-router-dom';
-import debounce from 'lodash.debounce'; // Import lodash debounce for efficiency
+import debounce from 'lodash.debounce';
+
+const nhlTeams = [
+  'Anaheim Ducks', 'Arizona Coyotes', 'Boston Bruins', 'Buffalo Sabres', 'Calgary Flames',
+  'Carolina Hurricanes', 'Chicago Blackhawks', 'Colorado Avalanche', 'Columbus Blue Jackets',
+  'Dallas Stars', 'Detroit Red Wings', 'Edmonton Oilers', 'Florida Panthers', 'Los Angeles Kings',
+  'Minnesota Wild', 'Montreal Canadiens', 'Nashville Predators', 'New Jersey Devils',
+  'New York Islanders', 'New York Rangers', 'Ottawa Senators', 'Philadelphia Flyers',
+  'Pittsburgh Penguins', 'San Jose Sharks', 'Seattle Kraken', 'St. Louis Blues',
+  'Tampa Bay Lightning', 'Toronto Maple Leafs', 'Vancouver Canucks', 'Vegas Golden Knights',
+  'Washington Capitals', 'Winnipeg Jets'
+];
 
 const AuthUser = () => {
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
 
-  // Player Data States
   const [playerName, setPlayerName] = useState('');
   const [playerResults, setPlayerResults] = useState([]);
   const [playerError, setPlayerError] = useState(null);
 
-  // Team Data States
   const [teamName, setTeamName] = useState('');
   const [teamResults, setTeamResults] = useState([]);
   const [teamError, setTeamError] = useState(null);
@@ -29,7 +38,6 @@ const AuthUser = () => {
     }
   }, [user, navigate]);
 
-  // Debounced search for player data
   const fetchPlayerData = debounce(async (name) => {
     if (!name.trim()) {
       setPlayerError(null);
@@ -54,32 +62,6 @@ const AuthUser = () => {
     }
   }, 300);
 
-  // Debounced search for team data
-  const fetchTeamData = debounce(async (name) => {
-    if (!name.trim()) {
-      setTeamError(null);
-      setTeamResults([]);
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/getTeam?teamName=${encodeURIComponent(name.trim())}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Team not found');
-      }
-
-      setTeamResults(data.teamData || []);
-      setTeamError(null);
-    } catch (error) {
-      console.error('Error fetching team data:', error);
-      setTeamError('Failed to fetch team data.');
-      setTeamResults([]);
-    }
-  }, 300);
-
-  // Input Handlers
   const handlePlayerInputChange = (e) => {
     const name = e.target.value;
     setPlayerName(name);
@@ -89,7 +71,12 @@ const AuthUser = () => {
   const handleTeamInputChange = (e) => {
     const name = e.target.value;
     setTeamName(name);
-    fetchTeamData(name);
+
+    if (name) {
+      fetchTeamData(name);
+    } else {
+      setTeamResults([]);
+    }
   };
 
   if (loading) {
@@ -105,16 +92,31 @@ const AuthUser = () => {
     );
   }
 
+  const fetchTeamData = async (name) => {
+    try {
+      const response = await fetch(`/api/getTeam?teamName=${encodeURIComponent(name.trim())}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Team not found');
+      }
+
+      setTeamResults(Array.isArray(data.teamData) ? data.teamData : [data.teamData]);
+      setTeamError(null);
+    } catch (error) {
+      console.error('Error fetching team data:', error);
+      setTeamError('Failed to fetch team data.');
+      setTeamResults([]);
+    }
+  };
+
   return (
     <Layout>
-      {/* Welcome Section */}
       <div className="flex justify-center items-start min-h-[15vh] pt-4">
         <h2 className="text-2xl font-bold text-center">Welcome, {user.email}!</h2>
       </div>
 
-      {/* Search & Results Section */}
       <div className="flex min-h-[85vh]">
-        {/* Left Side - Player Search */}
         <div className="w-1/2 p-4">
           <div className="search-container mt-2 w-3/4 mx-auto">
             <input
@@ -132,6 +134,7 @@ const AuthUser = () => {
             <div className="player-results mt-4">
               <h3>Matching Players</h3>
               {playerResults.map((player) => (
+                player && (
                 <div key={player._id} className="border p-4 mt-4 rounded-md bg-gray-100">
                   <h4 className="font-bold text-lg">{player.username}</h4>
                   <ul className="grid grid-cols-2 gap-2">
@@ -149,41 +152,47 @@ const AuthUser = () => {
                     <li><strong>Ice Time:</strong> {player.icetime}</li>
                   </ul>
                 </div>
+                )
               ))}
             </div>
           )}
         </div>
 
-        {/* Right Side - Team Search */}
         <div className="w-1/2 p-4">
           <div className="search-container mt-2 w-3/4 mx-auto">
-            <input
-              type="text"
-              placeholder="Search for a team..."
+            <select
               value={teamName}
               onChange={handleTeamInputChange}
               className="p-2 border-2 border-gray-300 rounded-md w-full"
-            />
+            >
+              <option value="">Select a Team</option>
+              {nhlTeams.map((team) => (
+                <option key={team} value={team}>{team}</option>
+              ))}
+            </select>
           </div>
 
           {teamError && <p className="text-red-500 mt-4">{teamError}</p>}
 
           {teamResults.length > 0 && (
-            <div className="team-results mt-4">
-              <h3>Matching Teams</h3>
-              {teamResults.map((team) => (
-                <div key={team._id} className="border p-4 mt-4 rounded-md bg-gray-100">
-                  <h4 className="font-bold text-lg">{team.team}</h4>
-                  <ul className="grid grid-cols-2 gap-2">
-                    <li><strong>Goals For:</strong> {team.goals_for}</li>
-                    <li><strong>Team Assists:</strong> {team.team_assists}</li>
-                    <li><strong>Penalty Minutes:</strong> {team.penalty_minutes}</li>
-                    <li><strong>Goals Per Game:</strong> {team.goals_per_game.toFixed(2)}</li>
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
+  <div className="team-results mt-4">
+    <h3>Matching Teams</h3>
+    {teamResults.map((team) => (
+      team && (
+      <div key={team._id} className="border p-4 mt-4 rounded-md bg-gray-100">
+        <h4 className="font-bold text-lg">{team.team}</h4>
+        <ul className="grid grid-cols-2 gap-2">
+          <li><strong>Goals For:</strong> {team.goals_for}</li>
+          <li><strong>Team Assists:</strong> {team.team_assists}</li>
+          <li><strong>Penalty Minutes:</strong> {team.team_pim}</li>
+          <li><strong>Goals Per Game:</strong> {(team.goals_per_game || 0).toFixed(2)}</li>
+        </ul>
+      </div>
+      )
+    ))}
+  </div>
+)}
+
         </div>
       </div>
     </Layout>
