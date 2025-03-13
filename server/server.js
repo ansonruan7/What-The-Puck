@@ -1,7 +1,4 @@
-require('dotenv').config(); // Load environment variables
-console.log('Environment Variables Loaded:');
-console.log('EMAIL_USER:', process.env.EMAIL_USER); // Debug email user
-console.log('EMAIL_PASS:', process.env.EMAIL_PASS); // Debug email password
+require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -19,6 +16,14 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
 const { ObjectId } = require('mongodb');
+const cors = require('cors');
+
+app.use(cors({
+    origin: 'http://localhost:3000',  // Allow frontend requests
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'],  // Allowed headers
+    credentials: true  // Allow cookies and authentication headers
+}));
 
 mongoose.connect('mongodb+srv://dkorkut:danielwestern@cluster0.xxodj.mongodb.net/WHATTHEPUCK', {
   useNewUrlParser: true,
@@ -112,9 +117,7 @@ const TEAMDATA = mongoose.model('TEAMDATA', {
 
 
 passport.use(new LocalStrategy({usernameField: 'email', passReqToCallback: true}, async function verify(req, email, password, cb) {
-  console.log(`${email} and ${password}`);
   host = req.host;
-  console.log(host);
 
   try{
     const user = await User.findOne({email});
@@ -281,34 +284,26 @@ app.get('/api/verify/:email/:userId', async (req, res) => {
 
 
 app.post('/api/login', async (req, res, next) => {
-  try{
-    const host = req.headers.host;
-    req.host = host;
+  try {
+      const { email, password } = req.body;
 
-    passport.authenticate('local', {host}, async(err, user, info) => {
-      if(err){
-        console.error('Error with your Authentication', err);
-        return res.status(500).json({message: 'Internal Server Error'});
-      }
-      if(!user){
-        return res.status(401).json({message: info.message} || 'Authentication has failed');
-      }
+      const user = await User.findOne({ email });
+      if (!user) return res.status(401).json({ message: "User not found" });
 
-      req.logIn(user, (loginErr) => {
-        if(loginErr){
-          console.error('Login err:', loginErr);
-          return res.status(500).json({message: 'Internal Service Error'});
-        }
-        const priv = user.isAdmin;
-        console.log(priv);
-        const token = jwt.sign({userId: user._id}, 'your_secret_key', {expiresIn: '24h'});
-        return res.status(200).json({message: 'Login Successful', user, token, priv});
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (!passwordMatch) return res.status(401).json({ message: "Invalid password" });
+
+      const token = jwt.sign({ userId: user._id }, 'your_secret_key', { expiresIn: '24h' });
+
+      res.status(200).json({ 
+          message: "Login Successful",
+          user,
+          token  // ✅ Ensure token is included in response
       });
-    })(req, res, next);
-  }catch(error){
-    console.error('Error during the process of authentication', error);
-    const errorMsg = error && error.info ? error.info.message : 'Authentication failed';
-    return res.status(401).json({message: errorMsg});
+
+  } catch (error) {
+      console.error("Login Error:", error);
+      res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
@@ -459,11 +454,6 @@ app.post('/api/data_decision', async (req, res) => {
   }
 });
 
-
-// Nodemailer configuration
-console.log("11111");
-console.log('Email User:', process.env.EMAIL_USER); // Debug email user
-console.log('Email Pass:', process.env.EMAIL_PASS); // Debug email password
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -639,4 +629,84 @@ mongoose.connect(process.env.MONGO_URI, {
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
+});
+
+const PLAYERDATA = mongoose.model('PLAYERDATA', {
+  full_name: { type: String, required: true }, // Full name of the player
+  team: {type: String, required: true},
+  games: {type: Number, require: true},
+  goals: { type: Number, required: true, default: 0 },
+  shots: { type: Number, required: true, default: 0 },
+  assists: { type: Number, required: true, default: 0 },
+  blocks: { type: Number, required: true, default: 0 },
+  pim: { type: Number, required: true, default: 0 }, // Penalty minutes
+  turnovers: { type: Number, required: true, default: 0 },
+  takeaways: { type: Number, required: true, default: 0 },
+  faceoff_wins: { type: Number, required: true, default: 0 },
+  faceoff_losses: { type: Number, required: true, default: 0 },
+  icetime: { type: String, required: true }, // Ice time stored as "MM:SS"
+  data_verified: { type: Boolean, default: false }
+});
+
+
+// Helper Function
+function timeToSeconds(timeStr) {
+  const [minutes, seconds] = timeStr.split(":").map(Number);
+  return minutes * 60 + seconds;
+}
+
+app.get('/api/getStatAverage', async (req, res) => {
+  try {
+    let data = await PLAYERDATA.find({}).lean();
+
+    if (data.length === 0) {
+      return res.status(404).json({ message: `No data found.` });
+    }
+    
+    let averages = {};
+    let count = data.length;
+    let rating_average = 0;
+
+    //Add values together to prepare to average
+    data.forEach(player => {
+      Object.entries(player).forEach(([key, value]) => {
+          if (typeof value === "number") {
+            averages[key] = (averages[key] || 0) + value;
+          } else if (key === "icetime" && typeof value === "string") {  
+            // Convert "MM:SS" to seconds
+            averages["icetime"] = (averages["icetime"] || 0) + timeToSeconds(value);
+          }
+      });
+    });
+
+    // Get the real average
+    Object.entries(averages).forEach(([key, value]) => {
+      averages[key] = value/count;
+    })
+
+    // Add weights to the categories for an accurate rating ***** THIS FORMULA IS IMPORTANT *****
+    averages["goals"] *= 40;
+    averages["shots"] *= 5;
+    averages["assists"] *= 20;
+    averages["blocks"] *= 5;
+    averages["faceoff_wins"] -= averages["faceoff_losses"];
+    averages["takeaways"] -= averages["turnovers"];
+    averages["pim"] *= -2.5;
+
+    delete averages["faceoff_losses"]; delete averages["turnovers"]; delete averages["games"];
+
+    let averages_values = Object.values(averages);
+
+    // Get player's ratings out of 100 relative to the average
+    for(let i=0;i<averages_values.length;i++){
+      rating_average += averages_values[i];
+    }
+    rating_average /= averages["icetime"];
+    console.log(rating_average);
+
+    res.send(averages);
+  } catch (error) {
+    console.error('Error fetching player data:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 });

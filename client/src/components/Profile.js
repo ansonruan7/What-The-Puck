@@ -9,6 +9,7 @@ const Profile = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [message, setMessage] = useState('');
+    
 
     useEffect(() => {
         if (user) {
@@ -24,8 +25,8 @@ const Profile = () => {
         }
     
         try {
-            const authToken = localStorage.getItem('token'); // ✅ Retrieve token
-            if (!authToken) {
+            const token = localStorage.getItem('token'); 
+            if (!token) {
                 setMessage('Not authenticated.');
                 return;
             }
@@ -34,7 +35,7 @@ const Profile = () => {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${authToken}`,
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({ email, username, password }),
             });
@@ -43,8 +44,6 @@ const Profile = () => {
     
             if (response.ok) {
                 setMessage('Profile updated successfully.');
-    
-                // ✅ Update User Context & Local Storage
                 const updatedUser = { ...user, email, username };
                 setUser(updatedUser);
                 localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -52,9 +51,10 @@ const Profile = () => {
                 setMessage(data.message || 'Error updating profile.');
             }
         } catch (error) {
+            console.error('Error:', error);
             setMessage('Failed to update profile.');
         }
-    };                
+    };                    
 
     return (
         <Layout>

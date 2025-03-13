@@ -20,34 +20,34 @@ const Login = () => {
       e.preventDefault();
   
       if (!email || !password) {
-        setInfo('Please enter both email and password.');
-        return;
+          setInfo('Please enter both email and password.');
+          return;
       }
   
       try {
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        });
+          const response = await fetch('http://localhost:5000/api/login', {  // Ensure full URL is used
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ email, password }),
+          });
   
-        if (response.ok) {
-          const { user, token } = await response.json();
-          localStorage.setItem('token', token);  // Store token
-          loginUser(user);  // Store user data in context
-          navigate('/AuthUser');  // Navigate to protected page
-        } else {
           const data = await response.json();
-          setInfo(data.message || 'Login failed, please try again.');
-        }
+  
+          if (response.ok && data.token) {
+              localStorage.setItem('token', data.token);  // Store token
+              loginUser(data.user, data.token);  // Store user data in context
+              navigate('/AuthUser');  // Navigate to protected page
+          } else {
+              console.error("Login failed. No token received.");
+              setInfo(data.message || 'Login failed, please try again.');
+          }
       } catch (error) {
-        setInfo('Login failed. Please try again later.');
+          console.error('Login request failed:', error);
+          setInfo('Login failed. Please try again later.');
       }
-    };
-
-
+  };
 
     return (
         <Layout>

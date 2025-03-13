@@ -19,12 +19,17 @@ export const UserProvider = ({ children }) => {
         }
     }, []);
 
-    const loginUser = (userData, authToken) => {
+    const loginUser = (userData, token) => {
+        if (!token) {
+            console.error("Auth Token is missing!"); // Debugging
+            return;
+        }
+    
         setUser(userData);
-        setToken(authToken);
-        localStorage.setItem('user', JSON.stringify(userData)); // ✅ Ensure user is saved
-        localStorage.setItem('token', authToken); // ✅ Ensure token is saved
-    };
+        setToken(token);
+        localStorage.setItem('user', JSON.stringify(userData)); 
+        localStorage.setItem('token', token); // Ensure token is stored
+    };    
 
     const logoutUser = () => {
         setUser(null);
