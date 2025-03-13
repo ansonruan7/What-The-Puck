@@ -3,41 +3,34 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-    const [user, setUser] = useState(undefined); // Default to `undefined` while loading
-    const [token, setToken] = useState(null);
+    const [user, setUser] = useState(() => {
+        const storedUser = localStorage.getItem('user');
+        return storedUser ? JSON.parse(storedUser) : null;
+    });
+    const [token, setToken] = useState(() => localStorage.getItem('token'));
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('authToken');
+        const storedToken = localStorage.getItem('token');
 
         if (storedUser && storedToken) {
-            try {
-                setUser(JSON.parse(storedUser));
-                setToken(storedToken);
-            } catch (error) {
-                console.error("Error parsing stored user:", error);
-                localStorage.removeItem('user'); // Clear invalid data
-                setUser(null);
-            }
-        } else {
-            setUser(null); // Ensure `user` is `null` if nothing is found
+            setUser(JSON.parse(storedUser));
+            setToken(storedToken);
         }
     }, []);
 
-    // ✅ Login Function
     const loginUser = (userData, authToken) => {
         setUser(userData);
         setToken(authToken);
-        localStorage.setItem('user', JSON.stringify(userData)); // ✅ Save user
-        localStorage.setItem('authToken', authToken); // ✅ Save token
+        localStorage.setItem('user', JSON.stringify(userData)); // ✅ Ensure user is saved
+        localStorage.setItem('token', authToken); // ✅ Ensure token is saved
     };
 
-    // ✅ Logout Function
     const logoutUser = () => {
         setUser(null);
         setToken(null);
-        localStorage.removeItem('user'); // ✅ Remove user
-        localStorage.removeItem('authToken'); // ✅ Remove token
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
     };
 
     return (
@@ -47,5 +40,4 @@ export const UserProvider = ({ children }) => {
     );
 };
 
-// ✅ Ensure only ONE context export
 export const useUser = () => useContext(UserContext);
