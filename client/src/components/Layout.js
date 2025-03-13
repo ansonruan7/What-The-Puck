@@ -5,14 +5,10 @@ import { useUser } from './UserContext';
 
 function Layout({ children }) {
     const navigate = useNavigate();
-    const navigateHome = () => navigate('/');
-    const navigateCreateAccount = () => navigate('/CreateAccount');
-    const navigateLogin = () => navigate('/Login');
     const navigateUserPortal = () => navigate('/AuthUser');
 
-    // Temporary code for navigation
     const navigateCoachDashboard = () => navigate('/CoachDashboard');
-    const navigatePlayerDashboard = () => navigate('/PlayerDashboard');  // Added Player Dashboard navigation
+    const navigatePlayerDashboard = () => navigate('/PlayerDashboard');
     const navigateAdminDashboard = () => navigate('/AdminDashboard');
     const navigateAverages = () => navigate('/Averages');
 
@@ -32,21 +28,34 @@ function Layout({ children }) {
                 </h1>
 
                 <div className="nav-links">
-                    <a href="#" onClick={navigateUserPortal}>User Portal</a>
-                    <a href="#" onClick={navigateCoachDashboard}>Coach Dashboard</a>
-                    <a href="#" onClick={navigatePlayerDashboard}>Player Dashboard</a> {/* Added Player Dashboard link */}
-                    <a href="#" onClick={navigateAdminDashboard}>Admin Dashboard</a>
-                    <a href='#' onClick={navigateAverages}>Averages</a>
+                    {user && <a href="#" onClick={navigateUserPortal}>User Portal</a>}
+
+                    {user?.role === 'Player' && (
+                        <>
+                            <a href="#" onClick={navigatePlayerDashboard}>Player Dashboard</a>
+                            <a href="#" onClick={navigateAverages}>Averages</a>
+                        </>
+                    )}
+
+                    {(user?.role === 'Coach/Manager' || user?.role === 'Admin') && (
+                        <>
+                            <a href="#" onClick={navigateCoachDashboard}>Coach Dashboard</a>
+                            <a href="#" onClick={navigateAverages}>Averages</a>
+                        </>
+                    )}
+
+                    {user?.role === 'Admin' && (
+                        <a href="#" onClick={navigateAdminDashboard}>Admin Dashboard</a>
+                    )}
                 </div>
 
                 {!user && (
                     <div className="cartButtonStyle">
-                        <a href="#" className="buttonTextStyle" onClick={navigateCreateAccount}>
+                        <a href="#" className="buttonTextStyle" onClick={() => navigate('/CreateAccount')}>
                             Create Account
                         </a>
                     </div>
                 )}
-
                 <main className="main-content">
                     {children}
                 </main>
