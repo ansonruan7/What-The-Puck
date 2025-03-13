@@ -3,38 +3,28 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-    const [user, setUser] = useState(() => {
-        const storedUser = localStorage.getItem('user');
-        return storedUser ? JSON.parse(storedUser) : null;
-    });
-    const [token, setToken] = useState(() => localStorage.getItem('token'));
+    const [user, setUser] = useState(undefined); // ⬅️ Default to `undefined` while loading
+    const [token, setToken] = useState(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
+        const storedToken = localStorage.getItem('authToken');
 
         if (storedUser && storedToken) {
-            setUser(JSON.parse(storedUser));
-            setToken(storedToken);
+            try {
+                setUser(JSON.parse(storedUser));
+                setToken(storedToken);
+            } catch (error) {
+                console.error("Error parsing stored user:", error);
+                localStorage.removeItem('user'); // Clear invalid data
+            }
+        } else {
+            setUser(null); // Ensure that if nothing is found, we don't stay `undefined`
         }
     }, []);
 
-    const loginUser = (userData, authToken) => {
-        setUser(userData);
-        setToken(authToken);
-        localStorage.setItem('user', JSON.stringify(userData)); // ✅ Ensure user is saved
-        localStorage.setItem('token', authToken); // ✅ Ensure token is saved
-    };
-
-    const logoutUser = () => {
-        setUser(null);
-        setToken(null);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-    };
-
     return (
-        <UserContext.Provider value={{ user, token, loginUser, logoutUser, setUser }}>
+        <UserContext.Provider value={{ user, token, setUser }}>
             {children}
         </UserContext.Provider>
     );
