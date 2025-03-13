@@ -596,6 +596,32 @@ const authenticateUser = (req, res, next) => {
   });
 };
 
+app.get('/api/getPlayer', async (req, res) => {
+  const { playerName } = req.query; // Extract player name from query parameters
+
+  if (!playerName) {
+      return res.status(400).json({ message: 'Please provide a player name.' });
+  }
+
+  try {
+      const playerData = await User.find({
+          username: { $regex: new RegExp(playerName, 'i') }, // Case-insensitive partial match
+          role: 'Player',           // Only show players
+          data_verified: true       // ✅ Only show verified data
+      }).select('-password -salt'); // Exclude sensitive data
+
+      if (!playerData || playerData.length === 0) {
+          return res.status(404).json({ message: `No data found for player: ${playerName}` });
+      }
+
+      res.status(200).json({ playerData }); // Return array of matching players
+  } catch (error) {
+      console.error('Error fetching player data:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+
 app.put('/api/update-profile', authenticateUser, async (req, res) => {
   const { email, username, password, stats } = req.body;
   const userId = req.user.userId;

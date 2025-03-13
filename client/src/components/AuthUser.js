@@ -133,7 +133,7 @@ const AuthUser = () => {
               <h3>Matching Players</h3>
               {playerResults.map((player) => (
                 <div key={player._id} className="border p-4 mt-4 rounded-md bg-gray-100">
-                  <h4 className="font-bold text-lg">{player.player}</h4>
+                  <h4 className="font-bold text-lg">{player.username}</h4>
                   <ul className="grid grid-cols-2 gap-2">
                     <li><strong>Team:</strong> {player.team}</li>
                     <li><strong>Games:</strong> {player.games}</li>
