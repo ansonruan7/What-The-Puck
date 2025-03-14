@@ -576,47 +576,6 @@ app.get('/api/getTeam', async (req, res) => {
   }
 });
 
-/* Helper Function */
-function timeToSeconds(timeStr) {
-  const [minutes, seconds] = timeStr.split(":").map(Number);
-  return minutes * 60 + seconds;
-}
-
-app.get('/api/getStatAverage', async (req, res) => {
-  try {
-    let data = await PLAYERDATA.find({}).lean();
-
-    if (data.length === 0) {
-      return res.status(404).json({ message: `No data found.` });
-    }
-    
-    let averages = {};
-    let count = data.length;
-
-    //Add values together to prepare to average
-    data.forEach(player => {
-      Object.entries(player).forEach(([key, value]) => {
-          if (typeof value === "number") {
-              averages[key] = (averages[key] || 0) + value;
-          } else if (key === "icetime" && typeof value === "string") {  
-              // Convert "MM:SS" to seconds
-              averages["icetime"] = (averages["icetime"] || 0) + timeToSeconds(value);
-          }
-      });
-  });
-
-    // Get the real average
-    Object.entries(averages).forEach(([key, value]) => {
-      averages[key] = value/count;
-    })
-
-    res.send(averages);
-  } catch (error) {
-    console.error('Error fetching player data:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
-
 const authenticateUser = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -706,57 +665,37 @@ mongoose.connect(process.env.MONGO_URI, {
       console.log('DB not Connected', e);
   });
 
-
-app.listen(port, () => {
-  console.log(`Listening on port ${port}`);
-});
-
-const PLAYERDATA = mongoose.model('PLAYERDATA', {
-  full_name: { type: String, required: true }, // Full name of the player
-  team: {type: String, required: true},
-  games: {type: Number, require: true},
-  goals: { type: Number, required: true, default: 0 },
-  shots: { type: Number, required: true, default: 0 },
-  assists: { type: Number, required: true, default: 0 },
-  blocks: { type: Number, required: true, default: 0 },
-  pim: { type: Number, required: true, default: 0 }, // Penalty minutes
-  turnovers: { type: Number, required: true, default: 0 },
-  takeaways: { type: Number, required: true, default: 0 },
-  faceoff_wins: { type: Number, required: true, default: 0 },
-  faceoff_losses: { type: Number, required: true, default: 0 },
-  icetime: { type: String, required: true }, // Ice time stored as "MM:SS"
-  data_verified: { type: Boolean, default: false }
-});
-
-
 // Helper Function
 function timeToSeconds(timeStr) {
   const [minutes, seconds] = timeStr.split(":").map(Number);
   return minutes * 60 + seconds;
 }
 
-app.get('/api/getStatAverage', async (req, res) => {
+app.get('/api/getAverages', async (req, res) => {
   try {
-    let data = await PLAYERDATA.find({}).lean();
+    let data = await User.find({}).lean();
 
     if (data.length === 0) {
       return res.status(404).json({ message: `No data found.` });
     }
     
     let averages = {};
-    let count = data.length;
+    let count = 0;
     let rating_average = 0;
 
     //Add values together to prepare to average
     data.forEach(player => {
-      Object.entries(player).forEach(([key, value]) => {
+      if(player["role"] === "Player"){
+        Object.entries(player).forEach(([key, value]) => {
           if (typeof value === "number") {
             averages[key] = (averages[key] || 0) + value;
           } else if (key === "icetime" && typeof value === "string") {  
             // Convert "MM:SS" to seconds
             averages["icetime"] = (averages["icetime"] || 0) + timeToSeconds(value);
           }
-      });
+        });
+        count += 1
+      }
     });
 
     // Get the real average
@@ -782,11 +721,17 @@ app.get('/api/getStatAverage', async (req, res) => {
       rating_average += averages_values[i];
     }
     rating_average /= averages["icetime"];
-    console.log(rating_average);
+    
+    // Append to the average to the object for frontend
+    averages["rating"] = rating_average;
 
     res.send(averages);
   } catch (error) {
     console.error('Error fetching player data:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
+});
+
+app.listen(port, () => {
+  console.log(`Listening on port ${port}`);
 });
