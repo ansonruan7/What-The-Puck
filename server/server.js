@@ -539,6 +539,16 @@ app.get('/api/players', async (req, res) => {
   }
 });
 
+app.get('/api/getTeams', async (req, res) => {
+  try {
+    const teams = await TEAMDATA.find({}, 'team'); // Fetch only team names
+    res.status(200).json({ teams });
+  } catch (error) {
+    console.error('Error fetching teams:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 
 
 app.get('/api/getTeam', async (req, res) => {
@@ -704,6 +714,51 @@ app.get('/api/comparePlayers', async (req, res) => {
 
   } catch (error) {
       console.error('Error comparing players:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.get('/api/compareTeams', async (req, res) => {
+  const { team1, team2 } = req.query;
+
+  if (!team1 || !team2) {
+      return res.status(400).json({ message: 'Please provide two team names.' });
+  }
+
+  try {
+      const [t1, t2] = await Promise.all([
+          TEAMDATA.findOne({ team: { $regex: new RegExp(`^${team1}$`, 'i') } }),
+          TEAMDATA.findOne({ team: { $regex: new RegExp(`^${team2}$`, 'i') } })
+      ]);
+
+      if (!t1 || !t2) {
+          return res.status(404).json({ message: 'One or both teams not found.' });
+      }
+
+      const comparisonData = {
+          team1: {
+              team: t1.team,
+              stats: t1
+          },
+          team2: {
+              team: t2.team,
+              stats: t2
+          },
+          comparison: {}
+      };
+
+      const statsToCompare = ['goals_for', 'team_assists', 'team_pim', 'goals_per_game'];
+      statsToCompare.forEach(stat => {
+          if (stat === 'team_pim') {
+              comparisonData.comparison[stat] = t1[stat] < t2[stat] ? 'team1' : 'team2';
+          } else {
+              comparisonData.comparison[stat] = t1[stat] > t2[stat] ? 'team1' : 'team2';
+          }
+      });
+
+      res.status(200).json(comparisonData);
+  } catch (error) {
+      console.error('Error comparing teams:', error);
       res.status(500).json({ message: 'Internal Server Error' });
   }
 });

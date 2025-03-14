@@ -140,7 +140,7 @@ const PlayerComp = () => {
           <div className="mt-6">
             <h2 className="text-xl font-bold mb-4">Comparison Results</h2>
             <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="font-bold">Stat</div>
+              <div className="font-bold">Player Name</div>
               <div className="font-bold">{comparisonData.player1.username}</div>
               <div className="font-bold">{comparisonData.player2.username}</div>
 
