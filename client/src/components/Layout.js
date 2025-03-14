@@ -28,7 +28,7 @@ function Layout({ children }) {
                     {user?.role != null && (
                         <>
                             <a href="/profile">Profile</a>
-                            <a href="#" onClick={navigatePlayerComp}>Player Comparision</a>
+                            <a href="#" onClick={navigatePlayerComp}>Player/Team Comparisions</a>
                             <a href="#" onClick={navigatePlayerDashboard}>Player Dashboard</a>
                             <a href="#" onClick={navigateAverages}>Averages</a>
                         </>

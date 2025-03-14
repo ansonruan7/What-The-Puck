@@ -671,16 +671,17 @@ app.get('/api/comparePlayers', async (req, res) => {
       const [p1, p2] = players;
 
       const comparisonData = {
-          player1: {
-              username: p1.username,
-              stats: p1
-          },
-          player2: {
-              username: p2.username,
-              stats: p2
-          },
-          comparison: {}
-      };
+        player1: {
+            username: `${p1.username} (${p1.team})`,
+            stats: p1
+        },
+        player2: {
+            username: `${p2.username} (${p2.team})`,
+            stats: p2
+        },
+        comparison: {}
+    };
+    
 
       // Compare numeric stats
       const statFields = [
