@@ -1,97 +1,46 @@
-import { React, useState } from 'react'
+import { React, useState, useEffect } from 'react'
 
 const Averages = () => {
 
-    let [data, updateData] = useState([]);
+    let [data, setData] = useState([]);
+    let average = 0;
 
-    //API SETUP, SUBTRACT TURNOVERS FROM TAKEAWAYS AND FACEOFF_LOSSES FROM WINS
-    data = [
-        {
-            "home_goals": 7,
-            "away_goals": 3,
-            "result": "WIN",
-            "full_name": "Kevin Liu",
-            "position": "C",
-            "goals": 10,
-            "shots": 42,
-            "assists": 8,
-            "blocks": 13,
-            "pim": 3.7,
-            "turnovers": 18,
-            "takeaways": 32,
-            "faceoff_wins": 2,
-            "faceoff_losses": 7,
-            "icetime": 1523
-        },
-        {
-            "home_goals": 2,
-            "away_goals": 5,
-            "result": "LOSS",
-            "full_name": "Jason Carter",
-            "position": "RW",
-            "goals": 1,
-            "shots": 15,
-            "assists": 3,
-            "blocks": 5,
-            "pim": 2.0,
-            "turnovers": 12,
-            "takeaways": 7,
-            "faceoff_wins": 0,
-            "faceoff_losses": 0,
-            "icetime": 1248
-        },
-        {
-            "home_goals": 6,
-            "away_goals": 4,
-            "result": "WIN",
-            "full_name": "Alex Johnson",
-            "position": "D",
-            "goals": 0,
-            "shots": 5,
-            "assists": 4,
-            "blocks": 17,
-            "pim": 5.2,
-            "turnovers": 9,
-            "takeaways": 14,
-            "faceoff_wins": 0,
-            "faceoff_losses": 0,
-            "icetime": 1672
-        },
-        {
-            "home_goals": 3,
-            "away_goals": 3,
-            "result": "TIE",
-            "full_name": "Ryan Smith",
-            "position": "LW",
-            "goals": 2,
-            "shots": 12,
-            "assists": 1,
-            "blocks": 8,
-            "pim": 1.0,
-            "turnovers": 14,
-            "takeaways": 9,
-            "faceoff_wins": 0,
-            "faceoff_losses": 0,
-            "icetime": 1398
-        },
-        {
-            "home_goals": 1,
-            "away_goals": 2,
-            "result": "LOSS",
-            "full_name": "Ethan Cole",
-            "position": "C",
-            "goals": 0,
-            "shots": 10,
-            "assists": 2,
-            "blocks": 10,
-            "pim": 4.5,
-            "turnovers": 7,
-            "takeaways": 11,
-            "faceoff_wins": 6,
-            "faceoff_losses": 4,
-            "icetime": 1285
+    useEffect(() => {
+        const getAverages = async () => {
+            try {
+                let response = await fetch('/api/getAverages');
+                if (response.ok) {
+                    const responseData = await response.json();
+                    average = responseData;
+                } else {
+                    const errorData = await response.json();
+                    average = (errorData.message || 'An error occurred.');
+                    console.error('Error fetching info:', errorData.message);
+                }
+            } catch (error) {
+                console.error('Fetching averages failed:', error);
+            }
+        };
+
+        const getPlayers = async () => {
+            try {
+                let response = await fetch('/api/getAllPlayers');
+                if (response.ok) {
+                    const responseData = await response.json();
+                    setData(responseData);
+                } else {
+                    const errorData = await response.json();
+                    setData(errorData.message || 'An error occurred.');
+                    console.error('Error fetching info:', errorData.message);
+                }
+            } catch (error) {
+                console.error('Fetching averages failed:', error);
+            }
         }
-    ]    
+
+        getAverages();
+        getPlayers();
+    }, []);
     
     return (
         <>
@@ -114,7 +63,7 @@ const Averages = () => {
                     return(
                         <>
                             <div className='grid grid-cols-12 bg-blue-400 p-5 my-4 rounded-2xl drop-shadow-md border-2 border-solid border-black text-center items-center'> { /* Actual Cards */}
-                                <p>{stat.full_name}</p>
+                                <p>{stat.username}</p>
                                 <p>{stat.position}</p>
                                 <p>{stat.goals}</p>
                                 <p>{stat.shots}</p>
@@ -125,7 +74,7 @@ const Averages = () => {
                                 <p>{stat.takeaways}</p>
                                 <p>{stat.faceoff_wins}</p>
                                 <p>{stat.faceoff_losses}</p>
-                                <p>{parseInt(stat.icetime/60) + ":" + parseInt(stat.icetime%60)}</p>
+                                <p>{stat.icetime}</p>
                             </div>
                         </>
                     )})

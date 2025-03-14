@@ -732,6 +732,18 @@ app.get('/api/getAverages', async (req, res) => {
   }
 });
 
+app.get('/api/getAllPlayers', async (req, res) => {
+  try {
+    let data = await User.find({}).lean();
+    if (data.length === 0) {
+      return res.status(404).json({ message: `No data found.` });
+    }
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(500).json({message: 'Internal Server Error'});
+  }
+});
+
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
