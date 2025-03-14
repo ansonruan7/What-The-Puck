@@ -11,6 +11,7 @@ function Layout({ children }) {
     const navigatePlayerDashboard = () => navigate('/PlayerDashboard');
     const navigateAdminDashboard = () => navigate('/AdminDashboard');
     const navigateAverages = () => navigate('/Averages');
+    const navigatePlayerComp = () => navigate('/PlayerComp');
 
     const { user } = useUser();
 
@@ -27,6 +28,7 @@ function Layout({ children }) {
                     {user?.role != null && (
                         <>
                             <a href="/profile">Profile</a>
+                            <a href="#" onClick={navigatePlayerComp}>Player Comparision</a>
                             <a href="#" onClick={navigatePlayerDashboard}>Player Dashboard</a>
                             <a href="#" onClick={navigateAverages}>Averages</a>
                         </>

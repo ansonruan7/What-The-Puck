@@ -576,6 +576,8 @@ app.get('/api/getTeam', async (req, res) => {
   }
 });
 
+
+
 const authenticateUser = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -646,6 +648,62 @@ app.put('/api/update-profile', authenticateUser, async (req, res) => {
       });
   } catch (error) {
       res.status(500).json({ message: 'Error updating profile.' });
+  }
+});
+
+app.get('/api/comparePlayers', async (req, res) => {
+  const { player1, player2 } = req.query;
+
+  if (!player1 || !player2) {
+      return res.status(400).json({ message: 'Please provide two player names.' });
+  }
+
+  try {
+      const players = await User.find({
+          username: { $in: [player1, player2] },
+          role: 'Player' // Ensure only player roles are fetched
+      });
+
+      if (players.length !== 2) {
+          return res.status(404).json({ message: 'Both players must exist in the database.' });
+      }
+
+      const [p1, p2] = players;
+
+      const comparisonData = {
+          player1: {
+              username: p1.username,
+              stats: p1
+          },
+          player2: {
+              username: p2.username,
+              stats: p2
+          },
+          comparison: {}
+      };
+
+      // Compare numeric stats
+      const statFields = [
+          'games', 'goals', 'shots', 'assists', 'blocks',
+          'pim', 'turnovers', 'takeaways', 'faceoff_wins',
+          'faceoff_losses'
+      ];
+
+      statFields.forEach((key) => {
+          if (p1[key] > p2[key]) {
+              comparisonData.comparison[key] = 'player1';
+          } else if (p1[key] < p2[key]) {
+              comparisonData.comparison[key] = 'player2';
+          } else {
+              comparisonData.comparison[key] = 'equal';
+          }
+      });
+
+      res.status(200).json(comparisonData);
+
+  } catch (error) {
+      console.error('Error comparing players:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
