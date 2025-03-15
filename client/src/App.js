@@ -11,6 +11,8 @@ import Averages from './components/Averages.js';
 import Navbar from './components/Navbar.js';
 import ProtectedRoute from './components/ProtectedRoute.js';
 import Profile from './components/Profile';
+import PlayerComp from './components/PlayerComp.js';
+import TeamComp from './components/TeamComp.js';
 
 function App() {
   return (
@@ -66,6 +68,24 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['Player', 'Coach/Manager', 'Admin']}>
                 <Averages />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/PlayerComp" 
+            element={
+              <ProtectedRoute allowedRoles={['Player', 'Coach/Manager', 'Admin']}>
+                <PlayerComp />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/TeamComp" 
+            element={
+              <ProtectedRoute allowedRoles={['Player', 'Coach/Manager', 'Admin']}>
+                <TeamComp />
               </ProtectedRoute>
             } 
           />
