@@ -13,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute.js';
 import Profile from './components/Profile';
 import PlayerComp from './components/PlayerComp.js';
 import TeamComp from './components/TeamComp.js';
+import Top from './components/Top.js';
 
 function App() {
   return (
@@ -86,6 +87,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['Player', 'Coach/Manager', 'Admin']}>
                 <TeamComp />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/Top" 
+            element={
+              <ProtectedRoute allowedRoles={['Player', 'Coach/Manager', 'Admin']}>
+                <Top />
               </ProtectedRoute>
             } 
           />

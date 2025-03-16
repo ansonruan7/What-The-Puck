@@ -862,6 +862,62 @@ app.get('/api/getAllPlayers', async (req, res) => {
   }
 });
 
+app.get('/api/top-users', async (req, res) => {
+  const { stat } = req.query; // e.g., 'goals', 'assists'
+  
+  // List of valid stats to ensure security
+  const validStats = [
+      'games', 'goals', 'shots', 'assists', 'blocks',
+      'pim', 'turnovers', 'takeaways', 'faceoff_wins',
+      'faceoff_losses', 'icetime'
+  ];
+
+  if (!validStats.includes(stat)) {
+      return res.status(400).json({ error: 'Invalid stat category.' });
+  }
+
+  try {
+      let topUsers;
+
+      if (stat === 'icetime') {
+          // For ice time, convert "MM:SS" to total seconds for sorting
+          topUsers = await User.aggregate([
+              {
+                  $match: {
+                      role: 'Player',
+                      data_verified: true
+                  }
+              },
+              {
+                  $addFields: {
+                      icetimeInSeconds: {
+                          $sum: [
+                              { $multiply: [{ $toInt: { $arrayElemAt: [{ $split: ["$icetime", ":"] }, 0] } }, 60] },
+                              { $toInt: { $arrayElemAt: [{ $split: ["$icetime", ":"] }, 1] } }
+                          ]
+                      }
+                  }
+              },
+              { $sort: { icetimeInSeconds: -1 } }, // Sort ice time by total seconds
+              { $limit: 10 }
+          ]);
+      } else {
+          topUsers = await User.find({
+              role: 'Player',          
+              data_verified: true      
+          })
+          .sort({ [stat]: -1 })        
+          .limit(10);                  
+      }
+
+      res.json(topUsers);
+  } catch (error) {
+      res.status(500).json({ error: 'Server error occurred.' });
+  }
+});
+
+
+
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });

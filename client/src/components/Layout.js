@@ -13,6 +13,7 @@ function Layout({ children }) {
     const navigateAverages = () => navigate('/Averages');
     const navigatePlayerComp = () => navigate('/PlayerComp');
     const navigateTeamComp = () => navigate('/TeamComp');
+    const navigateTop = () => navigate('/Top');
 
     const { user } = useUser();
 
@@ -31,6 +32,7 @@ function Layout({ children }) {
                             <a href="/profile">Profile</a>
                             <a href="#" onClick={navigatePlayerComp}>Player Comparisons</a>
                             <a href="#" onClick={navigateTeamComp}>Team Comparisons</a>
+                            <a href="#" onClick={navigateTop}>Top Players/Teams</a>
                             <a href="#" onClick={navigatePlayerDashboard}>Player Dashboard</a>
                             <a href="#" onClick={navigateAverages}>Averages</a>
                         </>
