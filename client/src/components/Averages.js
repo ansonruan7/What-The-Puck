@@ -28,6 +28,7 @@ const Averages = () => {
                 if (response.ok) {
                     const responseData = await response.json();
                     setData(responseData);
+                    calculateRatings(data);
                 } else {
                     const errorData = await response.json();
                     setData(errorData.message || 'An error occurred.');
@@ -36,6 +37,29 @@ const Averages = () => {
             } catch (error) {
                 console.error('Fetching averages failed:', error);
             }
+        }
+
+        const calculateRatings = (data) => {
+            console.log(data);
+            let count = data.length;
+            for(let i=0;i<data.length;i++){
+                let rating_average = 0;
+                Object.values(data).map((value) => {
+                    if(typeof value === "number" && value != "__v"){
+                        data[i][value] = data[i][value] / count;
+                    }
+                });
+                // Add weights to the categories for an accurate rating ***** THIS FORMULA IS IMPORTANT *****
+                data[i]["goals"] *= 40;
+                data[i]["shots"] *= 5;
+                data[i]["assists"] *= 20;
+                data[i]["blocks"] *= 5;
+                data[i]["faceoff_wins"] -= data["faceoff_losses"];
+                data[i]["takeaways"] -= data["turnovers"];
+                data[i]["pim"] *= -2.5;
+                delete data["faceoff_losses"]; delete data["turnovers"]; delete data["games"];
+            }
+            console.log(data);
         }
 
         getAverages();
@@ -59,10 +83,10 @@ const Averages = () => {
                 <p>Faceoff Losses</p>
                 <p>Icetime</p>
             </div>
-                {data.map((stat, key) => { {/* Cards */}
+                {data.map((stat, index) => { {/* Cards */}
                     return(
                         <>
-                            <div className='grid grid-cols-12 bg-blue-400 p-5 my-4 rounded-2xl drop-shadow-md border-2 border-solid border-black text-center items-center'> { /* Actual Cards */}
+                            <div key={index} className='grid grid-cols-12 bg-blue-400 p-5 my-4 rounded-2xl drop-shadow-md border-2 border-solid border-black text-center items-center'> { /* Actual Cards */}
                                 <p>{stat.username}</p>
                                 <p>{stat.position}</p>
                                 <p>{stat.goals}</p>
