@@ -917,6 +917,30 @@ app.get('/api/top-users', async (req, res) => {
 });
 
 
+app.get('/api/top-teams', async (req, res) => {
+  const { stat } = req.query;
+
+  const validStats = [
+      'goals_for', 'team_assists', 'team_pim', 'goals_per_game'
+  ];
+
+  if (!validStats.includes(stat)) {
+      return res.status(400).json({ error: 'Invalid stat category.' });
+  }
+
+  try {
+      const topTeams = await TEAMDATA.find({})
+          .sort({ [stat]: -1 })  // Sort teams by selected stat
+          .limit(10);            // Limit to top 10 teams
+
+      res.json(topTeams);
+  } catch (error) {
+      res.status(500).json({ error: 'Server error occurred.' });
+  }
+});
+
+
+
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
