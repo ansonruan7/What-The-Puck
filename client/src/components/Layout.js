@@ -25,29 +25,7 @@ function Layout({ children }) {
                 </h1>
 
                 <div className="nav-links">
-                    {user && <a href="#" onClick={navigateUserPortal}>User Portal</a>}
-
-                    {user?.role != null && (
-                        <>
-                            <a href="/profile">Profile</a>
-                            <a href="#" onClick={navigatePlayerComp}>Player Comparisons</a>
-                            <a href="#" onClick={navigateTeamComp}>Team Comparisons</a>
-                            <a href="#" onClick={navigateTop}>Top Players/Teams</a>
-                            <a href="#" onClick={navigatePlayerDashboard}>Player Dashboard</a>
-                            <a href="#" onClick={navigateAverages}>Averages</a>
-                        </>
-                    )}
-
-                    {(user?.role === 'Coach/Manager' || user?.role === 'Admin') && (
-                        <>
-                            <a href="#" onClick={navigateCoachDashboard}>Coach Dashboard</a>
-                            <a href="#" onClick={navigateAverages}>Averages</a>
-                        </>
-                    )}
-
-                    {user?.role === 'Admin' && (
-                        <a href="#" onClick={navigateAdminDashboard}>Admin Dashboard</a>
-                    )}
+                    
                 </div>
 
                 {!user && (
