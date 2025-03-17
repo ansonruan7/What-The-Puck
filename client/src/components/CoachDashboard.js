@@ -1,8 +1,10 @@
 import { React, useState, useEffect } from 'react';
+import { useUser } from './UserContext'; // 🔹 Import UserContext
 import "../index.css";
 import temp_picture from "../assets/TempPhoto.jpg";
 
 const CoachDashboard = () => {
+    const { user, token } = useUser(); // 🔹 Get user & token
     const [isLoggedIn, setIsLoggedIn] = useState(false);  
     const [team, setTeam] = useState([]);  
     const [isUpload, setIsUpload] = useState(false);
@@ -23,20 +25,28 @@ const CoachDashboard = () => {
     const [resultMessage, setResultMessage] = useState('');
 
     useEffect(() => {
-        const token = localStorage.getItem("authToken");
         if (token) {
             setIsLoggedIn(true);
         } else {
             setIsLoggedIn(false);
         }
-
+    
         const fetchPlayers = async () => {
             try {
                 const response = await fetch('/api/players');
                 const data = await response.json();
-
+    
                 if (response.ok) {
-                    setTeam(data); 
+                    console.log("Fetched Players:", data); // 🛠 Debugging
+    
+                    if (user?.role === "Admin") {
+                        setTeam(data); // Admin sees all players
+                    } else {
+                        console.log("Filtering for team:", user?.team); // 🛠 Debugging
+                        const filteredPlayers = data.filter(p => p.team === user?.team);
+                        console.log("Filtered Players:", filteredPlayers); // 🛠 Debugging
+                        setTeam(filteredPlayers); // Coach sees only their team
+                    }
                 } else {
                     console.error('Failed to fetch players:', data.message);
                 }
@@ -44,12 +54,11 @@ const CoachDashboard = () => {
                 console.error('Error fetching players:', error);
             }
         };
-
-        fetchPlayers();
-    }, []);
+    
+        if (user) fetchPlayers();
+    }, [user, token]);    
 
     const handleDataSubmission = async () => {
-        const token = localStorage.getItem("authToken");
         if (!token) {
             setResultMessage("Error: You are not logged in.");
             return;
@@ -77,7 +86,6 @@ const CoachDashboard = () => {
             setResultMessage("Error: Network or server issue occurred.");
         }
     };
-    
 
     const handleStatChange = (e) => {
         setStats({ ...stats, [e.target.name]: e.target.value });
@@ -137,48 +145,18 @@ const CoachDashboard = () => {
     
                     <div className='grid justify-center'>
                         <div className="text-center justify-center bg-white w-fit p-6 rounded-lg drop-shadow-md shadow-xl">
-                            <div className="my-4">
-                                <label htmlFor="">Please Select A Player: </label>
-                                <select  
-                                    onChange={(e) => setPlayer(e.target.value)} 
-                                    defaultValue=""
-                                    className='border-2 border-solid border-black p-2 rounded-md w-full'
-                                >
-                                    <option value="" disabled>Select a player</option>
-                                    {team.map((playerData, index) => (
-                                        <option key={index} value={playerData.username}>
-                                            {playerData.username}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-    
-                            <div className='grid grid-cols-2 gap-4'>
-                                {Object.keys(stats).map(stat => (
-                                    <div key={stat} className="my-2">
-                                        <label htmlFor={stat} className='block font-semibold'>{stat.replace('_', ' ').toUpperCase()}:</label>
-                                        <input 
-                                            name={stat} 
-                                            type='text' 
-                                            value={stats[stat]} 
-                                            onChange={handleStatChange} 
-                                            className='border-2 border-solid border-black p-2 rounded-md w-full'
-                                        />
-                                    </div>
+                            <h2 className="text-xl font-semibold">Submit Player Data</h2>
+                            <select 
+                                onChange={(e) => setPlayer(e.target.value)} 
+                                defaultValue=""
+                                className="w-full border rounded p-2"
+                            >
+                                <option value="" disabled>Select a player</option>
+                                {team.map((p, index) => (
+                                    <option key={index} value={p.username}>{p.username}</option>
                                 ))}
-                            </div>
+                            </select>
                         </div>
-    
-                        <button 
-                            onClick={handleDataSubmission} 
-                            className='rounded-xl border-2 border-black border-solid p-4 my-8 bg-blue-500 text-white hover:bg-blue-600 w-full'
-                        >
-                            Submit
-                        </button>
-    
-                        <p className={`w-full text-center ${resultMessage.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>
-                            {resultMessage}
-                        </p>
                     </div>
                 </div>
             )}

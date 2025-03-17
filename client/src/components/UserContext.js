@@ -1,23 +1,29 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react'; 
 
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-    const [user, setUser] = useState(() => {
-        const storedUser = localStorage.getItem('user');
-        return storedUser ? JSON.parse(storedUser) : null;
-    });
-    const [token, setToken] = useState(() => localStorage.getItem('token'));
+    const [user, setUser] = useState(null);
+    const [token, setToken] = useState(null);
 
     useEffect(() => {
+        console.log("Loading user from localStorage..."); // Debugging
         const storedUser = localStorage.getItem('user');
         const storedToken = localStorage.getItem('token');
 
         if (storedUser && storedToken) {
-            setUser(JSON.parse(storedUser));
-            setToken(storedToken);
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                setUser(parsedUser);
+                setToken(storedToken);
+                console.log("User Loaded:", parsedUser); // Debugging
+            } catch (error) {
+                console.error("Error parsing user from storage:", error);
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+            }
         }
-    }, []);
+    }, [token]); // 🔹 Ensures update when token changes
 
     const loginUser = (userData, token) => {
         if (!token) {
@@ -25,13 +31,15 @@ export const UserProvider = ({ children }) => {
             return;
         }
     
+        console.log("Logging in user:", userData); // Debugging
         setUser(userData);
         setToken(token);
         localStorage.setItem('user', JSON.stringify(userData)); 
-        localStorage.setItem('token', token); // Ensure token is stored
+        localStorage.setItem('token', token); 
     };    
 
     const logoutUser = () => {
+        console.log("Logging out..."); // Debugging
         setUser(null);
         setToken(null);
         localStorage.removeItem('user');

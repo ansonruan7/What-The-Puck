@@ -524,20 +524,22 @@ app.get('/api/player/dashboard',verifyToken, async (req, res) => {
 app.get('/api/players', async (req, res) => {
   try {
       const players = await User.find(
-          { role: 'Player', role_verified: true },  // Filter for verified players
-          { username: 1, _id: 0 }                   // Return only usernames
+          { role: 'Player', role_verified: true }, 
+          { username: 1, team: 1, _id: 0 }  // 🔹 Ensure `team` is included!
       );
 
       if (!players || players.length === 0) {
           return res.status(404).json({ message: 'No verified players found.' });
       }
 
+      console.log("Players API Response:", players); // 🛠 Debugging
       res.status(200).json(players);
   } catch (error) {
       console.error('Error fetching player data:', error);
       res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 app.get('/api/getTeams', async (req, res) => {
   try {
