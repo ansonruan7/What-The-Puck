@@ -787,6 +787,15 @@ function timeToSeconds(timeStr) {
   return minutes * 60 + seconds;
 }
 
+const secondsToTime = (seconds) => {
+  if (isNaN(seconds) || seconds < 0) return "00:00";
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+};
+
 app.get('/api/getAverages', async (req, res) => {
   try {
     let data = await User.find({}).lean();
@@ -819,27 +828,7 @@ app.get('/api/getAverages', async (req, res) => {
       averages[key] = value/count;
     })
 
-    // Add weights to the categories for an accurate rating ***** THIS FORMULA IS IMPORTANT *****
-    averages["goals"] *= 40;
-    averages["shots"] *= 5;
-    averages["assists"] *= 20;
-    averages["blocks"] *= 5;
-    averages["faceoff_wins"] -= averages["faceoff_losses"];
-    averages["takeaways"] -= averages["turnovers"];
-    averages["pim"] *= -2.5;
-
-    delete averages["faceoff_losses"]; delete averages["turnovers"]; delete averages["games"];
-
-    let averages_values = Object.values(averages);
-
-    // Get player's ratings out of 100 relative to the average
-    for(let i=0;i<averages_values.length;i++){
-      rating_average += averages_values[i];
-    }
-    rating_average /= averages["icetime"];
-    
-    // Append to the average to the object for frontend
-    averages["rating"] = rating_average;
+    averages["icetime"] = secondsToTime(averages["icetime"]);
 
     res.send(averages);
   } catch (error) {
