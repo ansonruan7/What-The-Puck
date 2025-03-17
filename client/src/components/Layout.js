@@ -5,15 +5,6 @@ import { useUser } from './UserContext';
 
 function Layout({ children }) {
     const navigate = useNavigate();
-    const navigateUserPortal = () => navigate('/AuthUser');
-
-    const navigateCoachDashboard = () => navigate('/CoachDashboard');
-    const navigatePlayerDashboard = () => navigate('/PlayerDashboard');
-    const navigateAdminDashboard = () => navigate('/AdminDashboard');
-    const navigateAverages = () => navigate('/Averages');
-    const navigatePlayerComp = () => navigate('/PlayerComp');
-    const navigateTeamComp = () => navigate('/TeamComp');
-    const navigateTop = () => navigate('/Top');
 
     const { user } = useUser();
 
