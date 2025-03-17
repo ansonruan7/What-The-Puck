@@ -148,7 +148,7 @@ const Averages = () => {
                 <div key={index} className='grid grid-cols-12 bg-blue-400 p-5 my-4 rounded-2xl border-2 text-center'>
                     <p>{stat.username}</p>
                     <p>{stat.position}</p>
-                    {Object.keys(averages || {}).slice(1).map((key) => (
+                    {Object.keys(averages || {}).slice(1,Object.keys(averages).length-1).map((key) => (
                         <p key={key} className='flex items-center justify-center'>
                             {key === "icetime"
                                 ? stat[key] // Display time as is
