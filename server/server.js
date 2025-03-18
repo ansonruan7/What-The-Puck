@@ -843,10 +843,9 @@ app.get('/api/getAllPlayers', async (req, res) => {
     if (data.length === 0) {
       return res.status(404).json({ message: `No data found.` });
     }
-    for(let i=0;i<data.length;i++)
-      if(data[i]["role"] != "Player"){ 
-        data.splice(i,i+1);
-      }
+    // Filter out non-player roles
+    data = data.filter(player => player.role === "Player");
+    
     res.status(200).send(data);
   } catch (error) {
     res.status(500).json({message: 'Internal Server Error'});
