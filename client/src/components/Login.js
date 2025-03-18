@@ -25,7 +25,7 @@ const Login = () => {
       }
   
       try {
-          const response = await fetch('http://localhost:5000/api/login', {  // Ensure full URL is used
+          const response = await fetch('api/login', {  // Ensure full URL is used
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',

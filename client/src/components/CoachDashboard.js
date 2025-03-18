@@ -4,7 +4,7 @@ import "../index.css";
 import temp_picture from "../assets/TempPhoto.jpg";
 
 const CoachDashboard = () => {
-    const { user, token } = useUser(); // 🔹 Get user & token
+    const { user, token } = useUser(); // 🔹 Get user & token    
     const [isLoggedIn, setIsLoggedIn] = useState(false);  
     const [team, setTeam] = useState([]);  
     const [isUpload, setIsUpload] = useState(false);
@@ -30,7 +30,7 @@ const CoachDashboard = () => {
         } else {
             setIsLoggedIn(false);
         }
-    
+
         const fetchPlayers = async () => {
             try {
                 const response = await fetch('/api/players');
@@ -86,6 +86,7 @@ const CoachDashboard = () => {
             setResultMessage("Error: Network or server issue occurred.");
         }
     };
+    
 
     const handleStatChange = (e) => {
         setStats({ ...stats, [e.target.name]: e.target.value });
@@ -145,18 +146,48 @@ const CoachDashboard = () => {
     
                     <div className='grid justify-center'>
                         <div className="text-center justify-center bg-white w-fit p-6 rounded-lg drop-shadow-md shadow-xl">
-                            <h2 className="text-xl font-semibold">Submit Player Data</h2>
-                            <select 
-                                onChange={(e) => setPlayer(e.target.value)} 
-                                defaultValue=""
-                                className="w-full border rounded p-2"
-                            >
-                                <option value="" disabled>Select a player</option>
-                                {team.map((p, index) => (
-                                    <option key={index} value={p.username}>{p.username}</option>
+                            <div className="my-4">
+                                <label htmlFor="">Please Select A Player: </label>
+                                <select  
+                                    onChange={(e) => setPlayer(e.target.value)} 
+                                    defaultValue=""
+                                    className='border-2 border-solid border-black p-2 rounded-md w-full'
+                                >
+                                    <option value="" disabled>Select a player</option>
+                                    {team.map((playerData, index) => (
+                                        <option key={index} value={playerData.username}>
+                                            {playerData.username}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+    
+                            <div className='grid grid-cols-2 gap-4'>
+                                {Object.keys(stats).map(stat => (
+                                    <div key={stat} className="my-2">
+                                        <label htmlFor={stat} className='block font-semibold'>{stat.replace('_', ' ').toUpperCase()}:</label>
+                                        <input 
+                                            name={stat} 
+                                            type='text' 
+                                            value={stats[stat]} 
+                                            onChange={handleStatChange} 
+                                            className='border-2 border-solid border-black p-2 rounded-md w-full'
+                                        />
+                                    </div>
                                 ))}
-                            </select>
+                            </div>
                         </div>
+    
+                        <button 
+                            onClick={handleDataSubmission} 
+                            className='rounded-xl border-2 border-black border-solid p-4 my-8 bg-blue-500 text-white hover:bg-blue-600 w-full'
+                        >
+                            Submit
+                        </button>
+    
+                        <p className={`w-full text-center ${resultMessage.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>
+                            {resultMessage}
+                        </p>
                     </div>
                 </div>
             )}
