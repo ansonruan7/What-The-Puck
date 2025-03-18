@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'; 
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import { useUser } from './UserContext';
@@ -25,47 +25,51 @@ function Navbar() {
 
             {/* Navigation Links */}
             <div className="flex items-center gap-6">
-                {user?.role && (
-                    <>
-                        <button onClick={() => navigate('/AuthUser')} className="hover:text-gray-300">
-                            User Portal
-                        </button>
-                        <button onClick={() => navigate('/PlayerComp')} className="hover:text-gray-300">
-                            Player Comparisons
-                        </button>
-                        <button onClick={() => navigate('/TeamComp')} className="hover:text-gray-300">
-                            Team Comparisons
-                        </button>
-                        <button onClick={() => navigate('/Top')} className="hover:text-gray-300">
-                            Top Players/Teams
-                        </button>
-                        <button onClick={() => navigate('/PlayerDashboard')} className="hover:text-gray-300">
-                            Player Dashboard
-                        </button>
-                        <button onClick={() => navigate('/Averages')} className="hover:text-gray-300">
-                            Averages
-                        </button>
-                    </>
-                )}
+                {user ? (
+                    user.role_verified ? (
+                        <>
+                            <button onClick={() => navigate('/AuthUser')} className="hover:text-gray-300">
+                                User Portal
+                            </button>
+                            <button onClick={() => navigate('/PlayerComp')} className="hover:text-gray-300">
+                                Player Comparisons
+                            </button>
+                            <button onClick={() => navigate('/TeamComp')} className="hover:text-gray-300">
+                                Team Comparisons
+                            </button>
+                            <button onClick={() => navigate('/Top')} className="hover:text-gray-300">
+                                Top Players/Teams
+                            </button>
+                            <button onClick={() => navigate('/PlayerDashboard')} className="hover:text-gray-300">
+                                Player Dashboard
+                            </button>
+                            <button onClick={() => navigate('/Averages')} className="hover:text-gray-300">
+                                Averages
+                            </button>
 
-                {(user?.role === 'Coach/Manager' || user?.role === 'Admin') && (
-                    <>
-                        <button onClick={() => navigate('/CoachDashboard')} className="hover:text-gray-300">
-                            Coach Dashboard
-                        </button>
-                        <button onClick={() => navigate('/Averages')} className="hover:text-gray-300">
-                            Averages
-                        </button>
-                    </>
-                )}
+                            {(user.role === 'Coach/Manager' || user.role === 'Admin') && (
+                                <>
+                                    <button onClick={() => navigate('/CoachDashboard')} className="hover:text-gray-300">
+                                        Coach Dashboard
+                                    </button>
+                                    <button onClick={() => navigate('/Averages')} className="hover:text-gray-300">
+                                        Averages
+                                    </button>
+                                </>
+                            )}
 
-                {user?.role === 'Admin' && (
-                    <button onClick={() => navigate('/AdminDashboard')} className="hover:text-gray-300">
-                        Admin Dashboard
-                    </button>
-                )}
+                            {user.role === 'Admin' && (
+                                <button onClick={() => navigate('/AdminDashboard')} className="hover:text-gray-300">
+                                    Admin Dashboard
+                                </button>
+                            )}
+                        </>
+                    ) : (
+                        <p className="text-red-500 font-semibold">Access limited until role is verified</p>
+                    )
+                ) : null}
 
-                {/* Login/Logout Section - Logout moved to the end and styled prominently */}
+                {/* Login/Logout Section */}
                 <div className="ml-6">
                     {user ? (
                         <button 
