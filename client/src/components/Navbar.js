@@ -31,6 +31,9 @@ function Navbar() {
                             <button onClick={() => navigate('/AuthUser')} className="hover:text-gray-300">
                                 User Portal
                             </button>
+                            <button onClick={() => navigate('/Profile')} className="hover:text-gray-300">
+                                Edit Profile
+                            </button>
                             <button onClick={() => navigate('/PlayerComp')} className="hover:text-gray-300">
                                 Player Comparisons
                             </button>
