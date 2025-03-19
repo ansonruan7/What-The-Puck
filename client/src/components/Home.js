@@ -12,7 +12,7 @@ const Home = () => {
                     <h2 className="text-2xl font-semibold text-gray-900 mb-2">A Proof of Concept</h2>
                     <p className="text-lg">
                         Originally designed for junior hockey teams, this project is currently a <strong>proof of concept</strong> 
-                        that analyzes <strong>NHL player performance</strong>. While it does not provide real-time statistics, it 
+                         that analyzes <strong>NHL player performance</strong>. While it does not provide real-time statistics, it 
                         evaluates players based on a range of factors, generating a <strong>performance rating</strong> and 
                         making all data accessible to <strong>players, coaches, and team staff</strong>.
                     </p>
