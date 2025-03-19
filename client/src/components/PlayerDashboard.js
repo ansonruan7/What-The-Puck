@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import Layout from './Layout';
-import { useUser } from './UserContext';
+import { useUser } from './UserContext';  
 
 const PlayerDashboard = () => {
     const { user } = useUser(); 
     const [verifiedStats, setVerifiedStats] = useState({});
 
+    const [prediction, setPrediction] = useState(null);
+    const [performance, setPerformance] = useState('');
+
     useEffect(() => {
         if (user?.data_verified) {
+            
             setVerifiedStats({
                 games: user.games,
                 goals: user.goals,
@@ -19,8 +23,38 @@ const PlayerDashboard = () => {
                 takeaways: user.takeaways,
                 faceoff_wins: user.faceoff_wins,
                 faceoff_losses: user.faceoff_losses,
-                icetime: user.icetime
+                icetime: user.icetime  
+                
             });
+
+            const aiInput = `${user.playerName} scored ${user.goals} goals on ${user.shots} shots, ${user.assists} assists, with ${user.blocks} shot blocks, ${user.pim} penalty minutes, ${user.turnovers} giveaways and ${user.takeaways} takeaways, with ${user.faceoff_wins} faceoff wins, and ${user.faceoff_losses} faceoff losses with ${user.icetime} minutes played`;
+            fetch('http://localhost:5000/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ input: aiInput }), 
+            })
+            .then(response => response.json())
+            .then(data => {
+                const parsedData = JSON.parse(data);
+                const predictionValue = parsedData.prediction;
+                //console.log(predictionValue + "AAAA")
+                setPrediction(predictionValue);
+
+                // Set performance based on the prediction value (1 or 0)
+                let performanceValue = "Unknown";
+                if (parsedData.prediction === 1) {
+                    performanceValue = "Overperformer";
+                  } else if (parsedData.prediction === 0) {
+                    performanceValue = "Underperformer";
+                  }
+                setPerformance(performanceValue);
+            })
+            .catch(error => {
+                console.error('Error fetching prediction:', error);
+            });
+            
         }
     }, [user]);
 
@@ -42,6 +76,13 @@ const PlayerDashboard = () => {
                             <p><strong>Faceoff Wins:</strong> {verifiedStats.faceoff_wins}</p>
                             <p><strong>Faceoff Losses:</strong> {verifiedStats.faceoff_losses}</p>
                             <p><strong>Ice Time:</strong> {verifiedStats.icetime}</p>
+                            {/* Display prediction and performance */}
+                            {prediction !== null && (
+                                <div className="prediction-section mt-4 p-4 bg-gray-100 rounded-lg">
+                                    <p><strong>AI Prediction:</strong> {prediction}</p>
+                                    <p><strong>Performance:</strong> {performance}</p>
+                                </div>
+                            )}
                         </>
                     ) : (
                         <p className="text-red-500">Stats are pending admin approval.</p>

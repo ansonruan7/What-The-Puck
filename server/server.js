@@ -14,9 +14,15 @@ const LocalStrategy = require('passport-local');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const bodyParser = require("body-parser");
+const { spawn } = require("child_process");
 
 const { ObjectId } = require('mongodb');
 const cors = require('cors');
+/*const childPython = spawn('python', ['predict.py', 'Jack Hughes scored 0 goals on 6  shots, 2 assists, with 0 shot blocks, 0 penalty minutes, 1 giveaway and 0 takeaways, with 1 faceoff win, and 3 faceoff losses with 20:37 minutes played'], );
+childPython.stdout.on('data', (data) => {
+  console.log(`stdout: ${data}`);
+});*/
 
 app.use(cors({
     origin: 'http://localhost:3000',  // Allow frontend requests
@@ -24,6 +30,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],  // Allowed headers
     credentials: true  // Allow cookies and authentication headers
 }));
+app.use(bodyParser.json());
 
 mongoose.connect('mongodb+srv://dkorkut:danielwestern@cluster0.xxodj.mongodb.net/WHATTHEPUCK', {
   useNewUrlParser: true,
@@ -94,6 +101,59 @@ const User = mongoose.model('User', {
   icetime: { type: String, default: '00:00' }, // Stored as "MM:SS"
   data_verified: { type: Boolean, default: false }
 });
+
+app.post("/predict", (req, res) => {
+  const text = req.body.input;
+  let responseSent = false;  // Flag to track if the response has been sent
+
+  const pythonProcess = spawn("python", ['predict.py', text]);
+  let dataBuffer = '';
+
+  // Handle the stdout response from Python
+  pythonProcess.stdout.on("data", (data) => {
+    
+    if (!responseSent) {
+      dataBuffer += data.toString();
+      //console.log(dataBuffer);
+      res.json(dataBuffer);
+      responseSent = true;
+    }
+  });
+
+  pythonProcess.stdout.on("end", () => {
+    if (!responseSent) {
+      try {
+        const result = JSON.parse(dataBuffer);
+        console.log(result);
+        res.json(result);
+        responseSent = true;
+      } catch (error) {
+        console.error(`Error parsing JSON: ${error}`);
+        res.status(500).json({ error: "Prediction failed due to JSON parsing error" });
+        responseSent = true;
+      }
+    }
+  });
+
+  /* Handle errors from stderr
+  pythonProcess.stderr.on("data", (data) => {
+    if (!responseSent) {
+      console.error(`ERROR: ${data.toString()}`);
+      res.status(500).json({ error: "Prediction failed" });
+      responseSent = true;
+    }
+  });*/
+
+  // Handle Python process exit
+  pythonProcess.on("close", (code) => {
+    if (!responseSent) {
+      console.error(`Python process exited with code ${code}`);
+      res.status(500).json({ error: "Prediction failed due to Python error" });
+      responseSent = true;
+    }
+  });
+});
+
 
 const HOCKEYDATA = mongoose.model('HOCKEYDATA',{
   player: {type: String, required: true},
