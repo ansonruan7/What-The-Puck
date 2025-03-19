@@ -79,8 +79,7 @@ const PlayerDashboard = () => {
                             {/* Display prediction and performance */}
                             {prediction !== null && (
                                 <div className="prediction-section mt-4 p-4 bg-gray-100 rounded-lg">
-                                    <p><strong>AI Prediction:</strong> {prediction}</p>
-                                    <p><strong>Performance:</strong> {performance}</p>
+                                    <p><strong>AI Performance Indicator:</strong> {performance}</p>
                                 </div>
                             )}
                         </>
