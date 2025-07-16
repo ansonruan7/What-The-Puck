@@ -32,7 +32,7 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 
-mongoose.connect('mongodb+srv://dkorkut:danielwestern@cluster0.xxodj.mongodb.net/WHATTHEPUCK', {
+mongoose.connect('', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
